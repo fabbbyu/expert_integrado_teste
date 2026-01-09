@@ -18,6 +18,8 @@ interface Lead {
   company: string | null
   position: string | null
   source: string | null
+  assigned_to: string | null
+  custom_data: Record<string, any> | null
   stage_id: string
 }
 

@@ -30,6 +30,7 @@ interface Lead {
   position: string | null
   source: string | null
   custom_data: Record<string, any> | null
+  assigned_to: string | null
   stage_id: string
   funnel_stages: {
     name: string
@@ -104,6 +105,7 @@ export default function LeadsPage() {
           position,
           source,
           custom_data,
+          assigned_to,
           stage_id,
           funnel_stages (
             name

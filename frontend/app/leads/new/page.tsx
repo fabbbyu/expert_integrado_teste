@@ -18,12 +18,18 @@ interface CustomField {
   options: string[] | null
 }
 
+interface User {
+  id: string
+  full_name: string | null
+}
+
 export default function NewLeadPage() {
   const { user, loading: authLoading } = useAuth()
   const router = useRouter()
   const [currentWorkspaceId, setCurrentWorkspaceId] = useState<string | null>(null)
   const [stages, setStages] = useState<Stage[]>([])
   const [customFields, setCustomFields] = useState<CustomField[]>([])
+  const [workspaceMembers, setWorkspaceMembers] = useState<User[]>([])
   const [customData, setCustomData] = useState<Record<string, any>>({})
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
@@ -37,6 +43,7 @@ export default function NewLeadPage() {
     source: '',
     notes: '',
     stage_id: '',
+    assigned_to: '',
   })
 
   useEffect(() => {
@@ -49,6 +56,7 @@ export default function NewLeadPage() {
       setCurrentWorkspaceId(workspaceId)
       loadStages(workspaceId)
       loadCustomFields(workspaceId)
+      loadWorkspaceMembers(workspaceId)
     }
   }, [user, router])
 
@@ -88,6 +96,31 @@ export default function NewLeadPage() {
     }
   }
 
+  const loadWorkspaceMembers = async (workspaceId: string) => {
+    try {
+      const { data, error } = await supabase
+        .from('workspace_members')
+        .select(`
+          user_id,
+          users (
+            id,
+            full_name
+          )
+        `)
+        .eq('workspace_id', workspaceId)
+
+      if (error) throw error
+
+      const members = (data || [])
+        .map((item: any) => item.users)
+        .filter((user: any) => user !== null)
+
+      setWorkspaceMembers(members)
+    } catch (error) {
+      console.error('Erro ao carregar membros:', error)
+    }
+  }
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     if (!currentWorkspaceId || !formData.stage_id) return
@@ -98,8 +131,16 @@ export default function NewLeadPage() {
         .from('leads')
         .insert({
           workspace_id: currentWorkspaceId,
-          ...formData,
-          custom_data: customData,
+          name: formData.name,
+          email: formData.email || null,
+          phone: formData.phone || null,
+          company: formData.company || null,
+          position: formData.position || null,
+          source: formData.source || null,
+          notes: formData.notes || null,
+          stage_id: formData.stage_id,
+          assigned_to: formData.assigned_to || null,
+          custom_data: Object.keys(customData).length > 0 ? customData : null,
         })
         .select()
         .single()
@@ -232,22 +273,42 @@ export default function NewLeadPage() {
               />
             </div>
 
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Etapa
-              </label>
-              <select
-                required
-                value={formData.stage_id}
-                onChange={(e) => setFormData({ ...formData, stage_id: e.target.value })}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500"
-              >
-                {stages.map((stage) => (
-                  <option key={stage.id} value={stage.id}>
-                    {stage.name}
-                  </option>
-                ))}
-              </select>
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Etapa *
+                </label>
+                <select
+                  required
+                  value={formData.stage_id}
+                  onChange={(e) => setFormData({ ...formData, stage_id: e.target.value })}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                >
+                  {stages.map((stage) => (
+                    <option key={stage.id} value={stage.id}>
+                      {stage.name}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Responsável
+                </label>
+                <select
+                  value={formData.assigned_to}
+                  onChange={(e) => setFormData({ ...formData, assigned_to: e.target.value })}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                >
+                  <option value="">Nenhum</option>
+                  {workspaceMembers.map((member) => (
+                    <option key={member.id} value={member.id}>
+                      {member.full_name || 'Sem nome'}
+                    </option>
+                  ))}
+                </select>
+              </div>
             </div>
 
             <div>

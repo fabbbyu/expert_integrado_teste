@@ -16,10 +16,14 @@ interface Lead {
   source: string | null
   notes: string | null
   custom_data: Record<string, any> | null
+  assigned_to: string | null
   stage_id: string
   funnel_stages: {
     id: string
     name: string
+  } | null
+  users: {
+    full_name: string | null
   } | null
 }
 
@@ -77,6 +81,9 @@ export default function LeadDetailPage() {
           funnel_stages (
             id,
             name
+          ),
+          users (
+            full_name
           )
         `)
         .eq('id', leadId)
@@ -283,6 +290,12 @@ export default function LeadDetailPage() {
                 {lead.source && (
                   <p>
                     <span className="font-medium">Origem:</span> {lead.source}
+                  </p>
+                )}
+                {lead.assigned_to && lead.users && (
+                  <p>
+                    <span className="font-medium">Responsável:</span>{' '}
+                    {lead.users.full_name || 'Sem nome'}
                   </p>
                 )}
               </div>
