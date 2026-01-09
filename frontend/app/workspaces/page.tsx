@@ -4,11 +4,13 @@ import { useEffect, useState } from 'react'
 import { supabase } from '@/lib/supabase/client'
 import { useRouter } from 'next/navigation'
 import { useAuth } from '@/lib/hooks/use-auth'
+import Link from 'next/link'
 
 interface Workspace {
   id: string
   name: string
   created_at: string
+  role?: string
 }
 
 export default function WorkspacesPage() {
@@ -31,6 +33,7 @@ export default function WorkspacesPage() {
         .from('workspace_members')
         .select(`
           workspace_id,
+          role,
           workspaces (
             id,
             name,
@@ -45,6 +48,7 @@ export default function WorkspacesPage() {
         id: item.workspaces.id,
         name: item.workspaces.name,
         created_at: item.workspaces.created_at,
+        role: item.role,
       }))
 
       setWorkspaces(formattedWorkspaces)
@@ -165,13 +169,31 @@ export default function WorkspacesPage() {
                 {workspaces.map((workspace) => (
                   <div
                     key={workspace.id}
-                    onClick={() => selectWorkspace(workspace.id)}
-                    className="p-6 border border-gray-200 rounded-lg hover:border-blue-500 hover:shadow-md cursor-pointer transition"
+                    className="p-6 border border-gray-200 rounded-lg hover:border-blue-500 hover:shadow-md transition"
                   >
-                    <h3 className="text-xl font-semibold mb-2">{workspace.name}</h3>
-                    <p className="text-sm text-gray-500">
-                      Criado em {new Date(workspace.created_at).toLocaleDateString('pt-BR')}
-                    </p>
+                    <div
+                      onClick={() => selectWorkspace(workspace.id)}
+                      className="cursor-pointer mb-3"
+                    >
+                      <h3 className="text-xl font-semibold mb-2">{workspace.name}</h3>
+                      <p className="text-sm text-gray-500">
+                        Criado em {new Date(workspace.created_at).toLocaleDateString('pt-BR')}
+                      </p>
+                      {workspace.role === 'admin' && (
+                        <span className="inline-block mt-2 text-xs bg-blue-100 text-blue-700 px-2 py-1 rounded">
+                          Admin
+                        </span>
+                      )}
+                    </div>
+                    {workspace.role === 'admin' && (
+                      <Link
+                        href={`/workspaces/${workspace.id}/invites`}
+                        onClick={(e) => e.stopPropagation()}
+                        className="block w-full text-center px-3 py-2 text-sm bg-gray-100 text-gray-700 rounded hover:bg-gray-200"
+                      >
+                        Gerenciar Convites
+                      </Link>
+                    )}
                   </div>
                 ))}
               </div>
