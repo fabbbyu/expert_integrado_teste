@@ -29,6 +29,7 @@ interface Lead {
   company: string | null
   position: string | null
   source: string | null
+  custom_data: Record<string, any> | null
   stage_id: string
   funnel_stages: {
     name: string
@@ -102,6 +103,7 @@ export default function LeadsPage() {
           company,
           position,
           source,
+          custom_data,
           stage_id,
           funnel_stages (
             name
@@ -122,7 +124,7 @@ export default function LeadsPage() {
     return leads.filter((lead) => lead.stage_id === stageId)
   }
 
-  const validateRequiredFields = (lead: Lead, stage: Stage): string[] => {
+  const validateRequiredFields = async (lead: Lead, stage: Stage): Promise<string[]> => {
     const missingFields: string[] = []
     const fieldMap: Record<string, string> = {
       name: 'Nome',
@@ -132,10 +134,36 @@ export default function LeadsPage() {
       position: 'Cargo',
     }
 
+    // Buscar nomes dos campos personalizados
+    const customFieldsMap: Record<string, string> = {}
+    if (currentWorkspaceId) {
+      try {
+        const { data: customFields } = await supabase
+          .from('custom_fields')
+          .select('name')
+          .eq('workspace_id', currentWorkspaceId)
+
+        customFields?.forEach((field) => {
+          customFieldsMap[field.name] = field.name
+        })
+      } catch (error) {
+        console.error('Erro ao buscar campos personalizados:', error)
+      }
+    }
+
     stage.required_fields.forEach((field) => {
-      const value = lead[field as keyof Lead]
-      if (!value || (typeof value === 'string' && value.trim() === '')) {
-        missingFields.push(fieldMap[field] || field)
+      // Verificar campos padrão
+      if (fieldMap[field]) {
+        const value = lead[field as keyof Lead]
+        if (!value || (typeof value === 'string' && value.trim() === '')) {
+          missingFields.push(fieldMap[field])
+        }
+      } else {
+        // Verificar campos personalizados
+        const customValue = lead.custom_data?.[field]
+        if (!customValue || (typeof customValue === 'string' && customValue.trim() === '')) {
+          missingFields.push(customFieldsMap[field] || field)
+        }
       }
     })
 
@@ -158,7 +186,7 @@ export default function LeadsPage() {
     if (!lead || !targetStage) return
 
     // Validar campos obrigatórios
-    const missingFields = validateRequiredFields(lead, targetStage)
+    const missingFields = await validateRequiredFields(lead, targetStage)
     
     if (missingFields.length > 0) {
       alert(

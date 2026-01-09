@@ -58,7 +58,12 @@ serve(async (req) => {
 
     // Adicionar campos personalizados se existirem
     if (lead.custom_data && typeof lead.custom_data === 'object') {
-      Object.assign(leadData, lead.custom_data)
+      const customData = lead.custom_data as Record<string, any>
+      Object.entries(customData).forEach(([key, value]) => {
+        if (value !== null && value !== undefined && value !== '') {
+          leadData[key] = value
+        }
+      })
     }
 
     const promptText = `

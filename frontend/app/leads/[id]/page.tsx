@@ -15,6 +15,7 @@ interface Lead {
   position: string | null
   source: string | null
   notes: string | null
+  custom_data: Record<string, any> | null
   stage_id: string
   funnel_stages: {
     id: string
@@ -90,6 +91,11 @@ export default function LeadDetailPage() {
     } finally {
       setLoading(false)
     }
+  }
+
+  const getCustomFieldsData = () => {
+    if (!lead?.custom_data || typeof lead.custom_data !== 'object') return null
+    return lead.custom_data
   }
 
   const loadCampaigns = async (workspaceId: string) => {
@@ -287,6 +293,20 @@ export default function LeadDetailPage() {
             <div className="mt-6">
               <h3 className="text-sm font-medium text-gray-500 mb-2">Observações</h3>
               <p className="text-gray-700 whitespace-pre-wrap">{lead.notes}</p>
+            </div>
+          )}
+
+          {getCustomFieldsData() && (
+            <div className="mt-6">
+              <h3 className="text-sm font-medium text-gray-500 mb-2">Campos Personalizados</h3>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {Object.entries(getCustomFieldsData() || {}).map(([key, value]) => (
+                  <div key={key}>
+                    <span className="font-medium text-sm">{key}:</span>{' '}
+                    <span className="text-gray-700">{String(value)}</span>
+                  </div>
+                ))}
+              </div>
             </div>
           )}
 
