@@ -97,27 +97,30 @@ export default function DashboardPage() {
           <p className="text-gray-600 mt-2">Visão geral do seu workspace</p>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {/* Card Total de Leads */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
           <div className="bg-white rounded-lg shadow p-6">
             <h3 className="text-sm font-medium text-gray-500 mb-2">Total de Leads</h3>
             <p className="text-3xl font-bold">{stats.totalLeads}</p>
           </div>
-
-          {/* Cards por Etapa */}
-          {stats.leadsByStage.map((item) => (
-            <div key={item.stage_name} className="bg-white rounded-lg shadow p-6">
-              <h3 className="text-sm font-medium text-gray-500 mb-2">{item.stage_name}</h3>
-              <p className="text-3xl font-bold">{item.count}</p>
-            </div>
-          ))}
         </div>
 
-        {stats.leadsByStage.length === 0 && (
+        <div className="bg-white rounded-lg shadow p-6">
+          <h2 className="text-xl font-semibold mb-4">Leads por Etapa</h2>
+          <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-4">
+            {stats.leadsByStage.map((item) => (
+              <div key={item.stage_name} className="text-center">
+                <p className="text-2xl font-bold">{item.count}</p>
+                <p className="text-sm text-gray-600 mt-1">{item.stage_name}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {stats.totalLeads === 0 && (
           <div className="mt-8 bg-white rounded-lg shadow p-8 text-center">
             <p className="text-gray-600 mb-4">Ainda não há leads cadastrados</p>
             <button
-              onClick={() => router.push('/leads')}
+              onClick={() => router.push('/leads/new')}
               className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
             >
               Criar primeiro lead
