@@ -747,7 +747,9 @@ Esta seção lista os commits planejados. **Importante**: Mensagens devem variar
 ## 💡 Dicas para Manter Tudo Natural
 
 ### Commits
-- **IMPORTANTE**: Antes de fazer qualquer commit, confirmar com você a mensagem OU passar a mensagem para você fazer o commit
+- **IMPORTANTE**: Você sempre fará os commits manualmente. Eu passo a mensagem sugerida e você me avisa quando terminar.
+- **Estratégia**: Commits por funcionalidade completa, não por arquivo. Agrupar coisas relacionadas.
+- **Quantidade**: Cerca de 15-20 commits organizados, mostrando evolução sem exagerar.
 - **Variação no estilo**: Alguns formais ("feat: implementar..."), outros diretos ("feat: adicionar..."), alguns com contexto ("feat: criar X para Y")
 - **Não super padronizado**: Evitar sempre o mesmo formato
 - **Mensagens claras mas humanas**: "fix: corrigir bug no drag" > "fix: corrigir problema de arrastar leads entre etapas do funil"
