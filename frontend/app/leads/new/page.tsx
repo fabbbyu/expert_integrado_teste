@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react'
 import { supabase } from '@/lib/supabase/client'
 import { useAuth } from '@/lib/hooks/use-auth'
 import { useRouter } from 'next/navigation'
+import { createActivityLog } from '@/lib/utils/activity-log'
 
 interface Stage {
   id: string
@@ -146,6 +147,16 @@ export default function NewLeadPage() {
         .single()
 
       if (error) throw error
+
+      // Registrar atividade
+      if (user?.id && newLead) {
+        await createActivityLog({
+          leadId: newLead.id,
+          userId: user.id,
+          actionType: 'lead_created',
+          details: {},
+        })
+      }
 
       // Verificar se há campanhas com gatilho nesta etapa e gerar automaticamente
       try {

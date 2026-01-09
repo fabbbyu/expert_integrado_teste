@@ -5,6 +5,7 @@ import { supabase } from '@/lib/supabase/client'
 import { useAuth } from '@/lib/hooks/use-auth'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
+import { createActivityLog } from '@/lib/utils/activity-log'
 import {
   DndContext,
   DragOverlay,
@@ -50,7 +51,12 @@ export default function LeadsPage() {
   const [currentWorkspaceId, setCurrentWorkspaceId] = useState<string | null>(null)
   const [stages, setStages] = useState<Stage[]>([])
   const [leads, setLeads] = useState<Lead[]>([])
+  const [allLeads, setAllLeads] = useState<Lead[]>([])
+  const [workspaceMembers, setWorkspaceMembers] = useState<Array<{ id: string; full_name: string | null }>>([])
   const [loading, setLoading] = useState(true)
+  const [searchTerm, setSearchTerm] = useState('')
+  const [filterStage, setFilterStage] = useState<string>('')
+  const [filterAssigned, setFilterAssigned] = useState<string>('')
   const [activeId, setActiveId] = useState<string | null>(null)
   
   const sensors = useSensors(
@@ -114,13 +120,61 @@ export default function LeadsPage() {
         .eq('workspace_id', workspaceId)
 
       if (leadsError) throw leadsError
+      setAllLeads(leadsData || [])
       setLeads(leadsData || [])
+
+      // Carregar membros do workspace
+      const { data: membersData, error: membersError } = await supabase
+        .from('workspace_members')
+        .select(`
+          user_id,
+          users (
+            id,
+            full_name
+          )
+        `)
+        .eq('workspace_id', workspaceId)
+
+      if (!membersError && membersData) {
+        const members = membersData
+          .map((item: any) => item.users)
+          .filter((user: any) => user !== null)
+        setWorkspaceMembers(members)
+      }
     } catch (error) {
       console.error('Erro ao carregar dados:', error)
     } finally {
       setLoading(false)
     }
   }
+
+  useEffect(() => {
+    // Aplicar filtros e busca
+    let filtered = [...allLeads]
+
+    // Busca por nome ou empresa
+    if (searchTerm) {
+      const term = searchTerm.toLowerCase()
+      filtered = filtered.filter(
+        (lead) =>
+          lead.name.toLowerCase().includes(term) ||
+          (lead.company && lead.company.toLowerCase().includes(term)) ||
+          (lead.email && lead.email.toLowerCase().includes(term))
+      )
+    }
+
+    // Filtro por etapa
+    if (filterStage) {
+      filtered = filtered.filter((lead) => lead.stage_id === filterStage)
+    }
+
+    // Filtro por responsável
+    if (filterAssigned) {
+      filtered = filtered.filter((lead) => lead.assigned_to === filterAssigned)
+    }
+
+    setLeads(filtered)
+  }, [searchTerm, filterStage, filterAssigned, allLeads])
 
   const getLeadsByStage = (stageId: string) => {
     return leads.filter((lead) => lead.stage_id === stageId)
@@ -215,6 +269,20 @@ export default function LeadsPage() {
 
       if (error) throw error
 
+      // Registrar atividade
+      if (user?.id) {
+        const oldStage = stages.find((s) => s.id === lead.stage_id)
+        await createActivityLog({
+          leadId,
+          userId: user.id,
+          actionType: 'stage_changed',
+          details: {
+            old_stage: oldStage?.name || '',
+            new_stage: targetStage.name,
+          },
+        })
+      }
+
       // Verificar se há campanhas com gatilho nesta etapa e gerar automaticamente
       try {
         const { data: campaigns } = await supabase
@@ -245,6 +313,13 @@ export default function LeadsPage() {
       alert('Erro ao mover lead. Tente novamente.')
       // Reverter se der erro
       loadData(currentWorkspaceId!)
+    } else {
+      // Atualizar lista local também
+      setAllLeads((prevLeads) =>
+        prevLeads.map((l) =>
+          l.id === leadId ? { ...l, stage_id: newStageId } : l
+        )
+      )
     }
   }
 
@@ -263,17 +338,85 @@ export default function LeadsPage() {
   return (
     <div className="min-h-screen bg-gray-50">
       <div className="max-w-7xl mx-auto px-4 py-8">
-        <div className="mb-8 flex justify-between items-center">
-          <div>
-            <h1 className="text-3xl font-bold">Leads</h1>
-            <p className="text-gray-600 mt-2">Gerencie seus leads</p>
+        <div className="mb-8">
+          <div className="flex justify-between items-center mb-4">
+            <div>
+              <h1 className="text-3xl font-bold">Leads</h1>
+              <p className="text-gray-600 mt-2">Gerencie seus leads</p>
+            </div>
+            <Link
+              href="/leads/new"
+              className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
+            >
+              + Novo Lead
+            </Link>
           </div>
-          <Link
-            href="/leads/new"
-            className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
-          >
-            + Novo Lead
-          </Link>
+
+          {/* Filtros e Busca */}
+          <div className="bg-white rounded-lg shadow p-4 mb-4">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Buscar
+                </label>
+                <input
+                  type="text"
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  placeholder="Nome, empresa ou email..."
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Filtrar por Etapa
+                </label>
+                <select
+                  value={filterStage}
+                  onChange={(e) => setFilterStage(e.target.value)}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                >
+                  <option value="">Todas as etapas</option>
+                  {stages.map((stage) => (
+                    <option key={stage.id} value={stage.id}>
+                      {stage.name}
+                    </option>
+                  ))}
+                </select>
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Filtrar por Responsável
+                </label>
+                <select
+                  value={filterAssigned}
+                  onChange={(e) => setFilterAssigned(e.target.value)}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                >
+                  <option value="">Todos</option>
+                  {workspaceMembers.map((member) => (
+                    <option key={member.id} value={member.id}>
+                      {member.full_name || 'Sem nome'}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            </div>
+            {(searchTerm || filterStage || filterAssigned) && (
+              <div className="mt-3">
+                <button
+                  onClick={() => {
+                    setSearchTerm('')
+                    setFilterStage('')
+                    setFilterAssigned('')
+                  }}
+                  className="text-sm text-blue-600 hover:text-blue-700"
+                >
+                  Limpar filtros
+                </button>
+              </div>
+            )}
+          </div>
         </div>
 
         {/* Board Kanban com drag and drop */}

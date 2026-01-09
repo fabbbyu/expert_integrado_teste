@@ -5,6 +5,7 @@ import { supabase } from '@/lib/supabase/client'
 import { useAuth } from '@/lib/hooks/use-auth'
 import { useRouter, useParams } from 'next/navigation'
 import Link from 'next/link'
+import { createActivityLog } from '@/lib/utils/activity-log'
 
 interface Lead {
   id: string
@@ -43,6 +44,17 @@ interface GeneratedMessage {
   } | null
 }
 
+interface ActivityLog {
+  id: string
+  action_type: string
+  details: Record<string, any>
+  created_at: string
+  user_id: string
+  users: {
+    full_name: string | null
+  } | null
+}
+
 export default function LeadDetailPage() {
   const { user, loading: authLoading } = useAuth()
   const router = useRouter()
@@ -52,6 +64,7 @@ export default function LeadDetailPage() {
   const [campaigns, setCampaigns] = useState<Campaign[]>([])
   const [selectedCampaignId, setSelectedCampaignId] = useState<string>('')
   const [generatedMessages, setGeneratedMessages] = useState<GeneratedMessage[]>([])
+  const [activityLogs, setActivityLogs] = useState<ActivityLog[]>([])
   const [loading, setLoading] = useState(true)
   const [generating, setGenerating] = useState(false)
   const [currentWorkspaceId, setCurrentWorkspaceId] = useState<string | null>(null)
@@ -68,6 +81,7 @@ export default function LeadDetailPage() {
         loadLead(workspaceId)
         loadCampaigns(workspaceId)
         loadGeneratedMessages()
+        loadActivityLogs()
       }
     }
   }, [user, leadId, router])
@@ -148,6 +162,57 @@ export default function LeadDetailPage() {
     }
   }
 
+  const loadActivityLogs = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('activity_logs')
+        .select(`
+          id,
+          action_type,
+          details,
+          created_at,
+          user_id,
+          users (
+            full_name
+          )
+        `)
+        .eq('lead_id', leadId)
+        .order('created_at', { ascending: false })
+        .limit(20)
+
+      if (error) throw error
+      setActivityLogs(data || [])
+    } catch (error) {
+      console.error('Erro ao carregar histórico:', error)
+    }
+  }
+
+  const formatActivityMessage = (log: ActivityLog) => {
+    const userName = log.users?.full_name || 'Usuário'
+    const date = new Date(log.created_at).toLocaleString('pt-BR')
+
+    switch (log.action_type) {
+      case 'lead_created':
+        return `${userName} criou este lead em ${date}`
+      case 'lead_updated':
+        return `${userName} atualizou o lead em ${date}`
+      case 'stage_changed':
+        const oldStage = log.details.old_stage || 'Etapa anterior'
+        const newStage = log.details.new_stage || 'Nova etapa'
+        return `${userName} moveu de "${oldStage}" para "${newStage}" em ${date}`
+      case 'message_generated':
+        const campaignName = log.details.campaign_name || 'Campanha'
+        return `${userName} gerou mensagens da campanha "${campaignName}" em ${date}`
+      case 'message_sent':
+        return `${userName} enviou uma mensagem em ${date}`
+      case 'assigned':
+        const assignedTo = log.details.assigned_to_name || 'alguém'
+        return `${userName} atribuiu para ${assignedTo} em ${date}`
+      default:
+        return `${userName} realizou uma ação em ${date}`
+    }
+  }
+
   const generateMessages = async () => {
     if (!selectedCampaignId) {
       alert('Selecione uma campanha')
@@ -170,6 +235,21 @@ export default function LeadDetailPage() {
 
       if (data.messages) {
         await loadGeneratedMessages()
+        
+        // Registrar atividade
+        if (user?.id) {
+          const campaign = campaigns.find((c) => c.id === selectedCampaignId)
+          await createActivityLog({
+            leadId,
+            userId: user.id,
+            actionType: 'message_generated',
+            details: {
+              campaign_name: campaign?.name || '',
+            },
+          })
+          await loadActivityLogs()
+        }
+        
         alert('Mensagens geradas com sucesso!')
       } else {
         throw new Error('Erro ao gerar mensagens')
@@ -207,6 +287,16 @@ export default function LeadDetailPage() {
             .eq('id', latestMessage.id)
         }
 
+        // Registrar atividade
+        if (user?.id) {
+          await createActivityLog({
+            leadId,
+            userId: user.id,
+            actionType: 'message_sent',
+            details: {},
+          })
+        }
+        
         alert('Mensagem enviada! Lead movido para "Tentando Contato"')
         router.push('/leads')
       }
@@ -393,6 +483,25 @@ export default function LeadDetailPage() {
                 >
                   Regenerar mensagens
                 </button>
+              </div>
+            )}
+          </div>
+
+          {/* Histórico de Atividades */}
+          <div className="mt-8 pt-6 border-t">
+            <h2 className="text-2xl font-bold mb-4">Histórico de Atividades</h2>
+            {activityLogs.length === 0 ? (
+              <p className="text-gray-500">Nenhuma atividade registrada ainda.</p>
+            ) : (
+              <div className="space-y-3">
+                {activityLogs.map((log) => (
+                  <div
+                    key={log.id}
+                    className="bg-gray-50 rounded-lg p-4 border border-gray-200"
+                  >
+                    <p className="text-sm text-gray-700">{formatActivityMessage(log)}</p>
+                  </div>
+                ))}
               </div>
             )}
           </div>
