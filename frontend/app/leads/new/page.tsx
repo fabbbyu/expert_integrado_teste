@@ -69,12 +69,40 @@ export default function NewLeadPage() {
 
     setSaving(true)
     try {
-      const { error } = await supabase.from('leads').insert({
-        workspace_id: currentWorkspaceId,
-        ...formData,
-      })
+      const { data: newLead, error } = await supabase
+        .from('leads')
+        .insert({
+          workspace_id: currentWorkspaceId,
+          ...formData,
+        })
+        .select()
+        .single()
 
       if (error) throw error
+
+      // Verificar se há campanhas com gatilho nesta etapa e gerar automaticamente
+      try {
+        const { data: campaigns } = await supabase
+          .from('campaigns')
+          .select('id')
+          .eq('workspace_id', currentWorkspaceId)
+          .eq('is_active', true)
+          .eq('trigger_stage_id', formData.stage_id)
+
+        if (campaigns && campaigns.length > 0 && newLead) {
+          // Chamar função de geração automática em background
+          supabase.functions.invoke('auto-generate', {
+            body: {
+              leadId: newLead.id,
+              newStageId: formData.stage_id,
+            },
+          }).catch((err) => {
+            console.error('Erro ao gerar mensagens automaticamente:', err)
+          })
+        }
+      } catch (autoGenError) {
+        console.error('Erro na geração automática:', autoGenError)
+      }
 
       router.push('/leads')
     } catch (error) {

@@ -325,22 +325,26 @@ export default function LeadDetailPage() {
             {generatedMessages.length > 0 && (
               <div className="space-y-4">
                 <h3 className="text-lg font-semibold">Mensagens Geradas</h3>
+                <p className="text-sm text-gray-500 mb-4">
+                  {generatedMessages[0].campaigns?.name} - Gerado em{' '}
+                  {new Date(generatedMessages[0].generated_at).toLocaleString('pt-BR')}
+                </p>
                 {generatedMessages[0].messages.map((message, index) => (
                   <div key={index} className="bg-gray-50 p-4 rounded-lg border">
                     <div className="flex justify-between items-start mb-2">
                       <span className="text-sm text-gray-500">
-                        Variação {index + 1} - {generatedMessages[0].campaigns?.name}
+                        Variação {index + 1}
                       </span>
                       <div className="flex gap-2">
                         <button
                           onClick={() => copyToClipboard(message)}
-                          className="text-sm text-blue-600 hover:text-blue-700"
+                          className="text-sm text-blue-600 hover:text-blue-700 px-2 py-1 hover:bg-blue-50 rounded"
                         >
                           Copiar
                         </button>
                         <button
                           onClick={() => sendMessage(message)}
-                          className="text-sm text-green-600 hover:text-green-700"
+                          className="text-sm text-green-600 hover:text-green-700 px-2 py-1 hover:bg-green-50 rounded"
                         >
                           Enviar
                         </button>
@@ -349,6 +353,13 @@ export default function LeadDetailPage() {
                     <p className="text-gray-700 whitespace-pre-wrap">{message}</p>
                   </div>
                 ))}
+                <button
+                  onClick={generateMessages}
+                  disabled={generating || !selectedCampaignId}
+                  className="text-sm text-gray-600 hover:text-gray-800"
+                >
+                  Regenerar mensagens
+                </button>
               </div>
             )}
           </div>

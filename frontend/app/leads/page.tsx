@@ -184,6 +184,32 @@ export default function LeadsPage() {
         .eq('id', leadId)
 
       if (error) throw error
+
+      // Verificar se há campanhas com gatilho nesta etapa e gerar automaticamente
+      try {
+        const { data: campaigns } = await supabase
+          .from('campaigns')
+          .select('id')
+          .eq('workspace_id', currentWorkspaceId)
+          .eq('is_active', true)
+          .eq('trigger_stage_id', newStageId)
+
+        if (campaigns && campaigns.length > 0) {
+          // Chamar função de geração automática em background (não bloquear UI)
+          supabase.functions.invoke('auto-generate', {
+            body: {
+              leadId: leadId,
+              newStageId: newStageId,
+            },
+          }).catch((err) => {
+            console.error('Erro ao gerar mensagens automaticamente:', err)
+            // Não mostrar erro para o usuário, é em background
+          })
+        }
+      } catch (autoGenError) {
+        // Ignorar erros de geração automática, não é crítico
+        console.error('Erro na geração automática:', autoGenError)
+      }
     } catch (error) {
       console.error('Erro ao mover lead:', error)
       alert('Erro ao mover lead. Tente novamente.')
