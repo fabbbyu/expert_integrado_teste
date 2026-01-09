@@ -1,10 +1,24 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import { useForm } from 'react-hook-form'
+import { zodResolver } from '@hookform/resolvers/zod'
 import { supabase } from '@/lib/supabase/client'
 import { useAuth } from '@/lib/hooks/use-auth'
 import { useRouter } from 'next/navigation'
 import { createActivityLog } from '@/lib/utils/activity-log'
+import { leadSchema, type LeadFormData } from '@/lib/validations/lead'
+import { Input } from '@/components/ui/Input'
+import { Textarea } from '@/components/ui/Textarea'
+import { Label } from '@/components/ui/Label'
+import { Button } from '@/components/ui/Button'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/Select'
 
 interface Stage {
   id: string
@@ -35,17 +49,28 @@ export default function NewLeadPage() {
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
 
-  const [formData, setFormData] = useState({
-    name: '',
-    email: '',
-    phone: '',
-    company: '',
-    position: '',
-    source: '',
-    notes: '',
-    stage_id: '',
-    assigned_to: '',
+  const {
+    register,
+    handleSubmit,
+    formState: { errors },
+    setValue,
+    watch,
+  } = useForm<LeadFormData>({
+    resolver: zodResolver(leadSchema),
+    defaultValues: {
+      name: '',
+      email: '',
+      phone: '',
+      company: '',
+      position: '',
+      source: '',
+      notes: '',
+      stage_id: '',
+      assigned_to: '',
+    },
   })
+
+  const stageId = watch('stage_id')
 
   useEffect(() => {
     if (typeof window !== 'undefined') {
@@ -73,7 +98,7 @@ export default function NewLeadPage() {
       setStages(data || [])
       // Selecionar primeira etapa por padrão
       if (data && data.length > 0) {
-        setFormData((prev) => ({ ...prev, stage_id: data[0].id }))
+        setValue('stage_id', data[0].id)
       }
     } catch (error) {
       console.error('Erro ao carregar etapas:', error)
@@ -122,9 +147,8 @@ export default function NewLeadPage() {
     }
   }
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
-    if (!currentWorkspaceId || !formData.stage_id) return
+  const onSubmit = async (data: LeadFormData) => {
+    if (!currentWorkspaceId || !data.stage_id) return
 
     setSaving(true)
     try {
@@ -132,15 +156,15 @@ export default function NewLeadPage() {
         .from('leads')
         .insert({
           workspace_id: currentWorkspaceId,
-          name: formData.name,
-          email: formData.email || null,
-          phone: formData.phone || null,
-          company: formData.company || null,
-          position: formData.position || null,
-          source: formData.source || null,
-          notes: formData.notes || null,
-          stage_id: formData.stage_id,
-          assigned_to: formData.assigned_to || null,
+          name: data.name,
+          email: data.email || null,
+          phone: data.phone || null,
+          company: data.company || null,
+          position: data.position || null,
+          source: data.source || null,
+          notes: data.notes || null,
+          stage_id: data.stage_id,
+          assigned_to: data.assigned_to || null,
           custom_data: Object.keys(customData).length > 0 ? customData : null,
         })
         .select()
@@ -165,14 +189,14 @@ export default function NewLeadPage() {
           .select('id')
           .eq('workspace_id', currentWorkspaceId)
           .eq('is_active', true)
-          .eq('trigger_stage_id', formData.stage_id)
+          .eq('trigger_stage_id', data.stage_id)
 
         if (campaigns && campaigns.length > 0 && newLead) {
           // Chamar função de geração automática em background
           supabase.functions.invoke('auto-generate', {
             body: {
               leadId: newLead.id,
-              newStageId: formData.stage_id,
+              newStageId: data.stage_id,
             },
           }).catch((err) => {
             console.error('Erro ao gerar mensagens automaticamente:', err)
@@ -205,95 +229,82 @@ export default function NewLeadPage() {
         <div className="bg-white rounded-lg shadow p-8">
           <h1 className="text-3xl font-bold mb-6">Novo Lead</h1>
 
-          <form onSubmit={handleSubmit} className="space-y-4">
+          <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
+              <Label htmlFor="name" className="mb-1">
                 Nome *
-              </label>
-              <input
-                type="text"
-                required
-                value={formData.name}
-                onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+              </Label>
+              <Input
+                id="name"
+                {...register('name')}
+                className={errors.name ? 'border-red-500' : ''}
               />
+              {errors.name && (
+                <p className="text-sm text-red-500 mt-1">{errors.name.message}</p>
+              )}
             </div>
 
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <Label htmlFor="email" className="mb-1">
                   Email
-                </label>
-                <input
+                </Label>
+                <Input
+                  id="email"
                   type="email"
-                  value={formData.email}
-                  onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                  {...register('email')}
+                  className={errors.email ? 'border-red-500' : ''}
                 />
+                {errors.email && (
+                  <p className="text-sm text-red-500 mt-1">{errors.email.message}</p>
+                )}
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <Label htmlFor="phone" className="mb-1">
                   Telefone
-                </label>
-                <input
-                  type="tel"
-                  value={formData.phone}
-                  onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500"
-                />
+                </Label>
+                <Input id="phone" type="tel" {...register('phone')} />
               </div>
             </div>
 
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <Label htmlFor="company" className="mb-1">
                   Empresa
-                </label>
-                <input
-                  type="text"
-                  value={formData.company}
-                  onChange={(e) => setFormData({ ...formData, company: e.target.value })}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500"
-                />
+                </Label>
+                <Input id="company" type="text" {...register('company')} />
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <Label htmlFor="position" className="mb-1">
                   Cargo
-                </label>
-                <input
-                  type="text"
-                  value={formData.position}
-                  onChange={(e) => setFormData({ ...formData, position: e.target.value })}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500"
-                />
+                </Label>
+                <Input id="position" type="text" {...register('position')} />
               </div>
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
+              <Label htmlFor="source" className="mb-1">
                 Origem
-              </label>
-              <input
+              </Label>
+              <Input
+                id="source"
                 type="text"
-                value={formData.source}
-                onChange={(e) => setFormData({ ...formData, source: e.target.value })}
+                {...register('source')}
                 placeholder="Ex: Site, LinkedIn, Indicação..."
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500"
               />
             </div>
 
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <Label htmlFor="stage_id" className="mb-1">
                   Etapa *
-                </label>
+                </Label>
                 <select
-                  required
-                  value={formData.stage_id}
-                  onChange={(e) => setFormData({ ...formData, stage_id: e.target.value })}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                  id="stage_id"
+                  {...register('stage_id')}
+                  className="w-full h-10 rounded-md border border-gray-300 bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
                 >
                   {stages.map((stage) => (
                     <option key={stage.id} value={stage.id}>
@@ -301,16 +312,19 @@ export default function NewLeadPage() {
                     </option>
                   ))}
                 </select>
+                {errors.stage_id && (
+                  <p className="text-sm text-red-500 mt-1">{errors.stage_id.message}</p>
+                )}
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <Label htmlFor="assigned_to" className="mb-1">
                   Responsável
-                </label>
+                </Label>
                 <select
-                  value={formData.assigned_to}
-                  onChange={(e) => setFormData({ ...formData, assigned_to: e.target.value })}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                  id="assigned_to"
+                  {...register('assigned_to')}
+                  className="w-full h-10 rounded-md border border-gray-300 bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
                 >
                   <option value="">Nenhum</option>
                   {workspaceMembers.map((member) => (
@@ -323,15 +337,10 @@ export default function NewLeadPage() {
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
+              <Label htmlFor="notes" className="mb-1">
                 Observações
-              </label>
-              <textarea
-                value={formData.notes}
-                onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
-                rows={4}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500"
-              />
+              </Label>
+              <Textarea id="notes" rows={4} {...register('notes')} />
             </div>
 
             {/* Campos Personalizados */}
@@ -397,20 +406,16 @@ export default function NewLeadPage() {
             )}
 
             <div className="flex gap-4 pt-4">
-              <button
-                type="submit"
-                disabled={saving}
-                className="flex-1 px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 disabled:opacity-50"
-              >
+              <Button type="submit" disabled={saving} className="flex-1">
                 {saving ? 'Salvando...' : 'Criar Lead'}
-              </button>
-              <button
+              </Button>
+              <Button
                 type="button"
                 onClick={() => router.back()}
-                className="px-4 py-2 bg-gray-200 text-gray-700 rounded hover:bg-gray-300"
+                variant="outline"
               >
                 Cancelar
-              </button>
+              </Button>
             </div>
           </form>
         </div>

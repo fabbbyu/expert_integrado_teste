@@ -1,9 +1,11 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect } from 'react'
 import { supabase } from '@/lib/supabase/client'
 import { useAuth } from '@/lib/hooks/use-auth'
 import { useRouter } from 'next/navigation'
+import { useQuery } from '@tanstack/react-query'
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts'
 
 interface DashboardStats {
   totalLeads: number
@@ -13,30 +15,29 @@ interface DashboardStats {
   }>
 }
 
+const COLORS = ['#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#06b6d4', '#ec4899']
+
 export default function DashboardPage() {
   const { user, loading: authLoading } = useAuth()
   const router = useRouter()
-  const [stats, setStats] = useState<DashboardStats>({
-    totalLeads: 0,
-    leadsByStage: [],
-  })
-  const [loading, setLoading] = useState(true)
-  const [currentWorkspaceId, setCurrentWorkspaceId] = useState<string | null>(null)
 
   useEffect(() => {
     if (typeof window !== 'undefined') {
       const workspaceId = localStorage.getItem('currentWorkspaceId')
       if (!workspaceId) {
         router.push('/workspaces')
-        return
       }
-      setCurrentWorkspaceId(workspaceId)
-      loadStats(workspaceId)
     }
   }, [user, router])
 
-  const loadStats = async (workspaceId: string) => {
-    try {
+  const workspaceId =
+    typeof window !== 'undefined' ? localStorage.getItem('currentWorkspaceId') : null
+
+  const { data: stats, isLoading } = useQuery<DashboardStats>({
+    queryKey: ['dashboard-stats', workspaceId],
+    queryFn: async () => {
+      if (!workspaceId) throw new Error('Workspace não selecionado')
+
       // Buscar total de leads
       const { count: totalLeads, error: leadsError } = await supabase
         .from('leads')
@@ -70,21 +71,26 @@ export default function DashboardPage() {
         count,
       }))
 
-      setStats({
+      return {
         totalLeads: totalLeads || 0,
         leadsByStage,
-      })
-    } catch (error) {
-      console.error('Erro ao carregar estatísticas:', error)
-    } finally {
-      setLoading(false)
-    }
-  }
+      }
+    },
+    enabled: !!workspaceId,
+  })
 
-  if (authLoading || loading) {
+  if (authLoading || isLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <p>Carregando...</p>
+      </div>
+    )
+  }
+
+  if (!stats) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <p>Nenhum workspace selecionado</p>
       </div>
     )
   }
@@ -104,19 +110,53 @@ export default function DashboardPage() {
           </div>
         </div>
 
-        <div className="bg-white rounded-lg shadow p-6">
-          <h2 className="text-xl font-semibold mb-4">Leads por Etapa</h2>
-          <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-4">
-            {stats.leadsByStage.map((item) => (
-              <div key={item.stage_name} className="text-center">
-                <p className="text-2xl font-bold">{item.count}</p>
-                <p className="text-sm text-gray-600 mt-1">{item.stage_name}</p>
-              </div>
-            ))}
-          </div>
-        </div>
+        {stats.totalLeads > 0 ? (
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+            {/* Gráfico de Barras */}
+            <div className="bg-white rounded-lg shadow p-6">
+              <h2 className="text-xl font-semibold mb-4">Leads por Etapa (Barras)</h2>
+              <ResponsiveContainer width="100%" height={300}>
+                <BarChart data={stats.leadsByStage}>
+                  <CartesianGrid strokeDasharray="3 3" />
+                  <XAxis
+                    dataKey="stage_name"
+                    angle={-45}
+                    textAnchor="end"
+                    height={100}
+                    fontSize={12}
+                  />
+                  <YAxis />
+                  <Tooltip />
+                  <Bar dataKey="count" fill="#3b82f6" />
+                </BarChart>
+              </ResponsiveContainer>
+            </div>
 
-        {stats.totalLeads === 0 && (
+            {/* Gráfico de Pizza */}
+            <div className="bg-white rounded-lg shadow p-6">
+              <h2 className="text-xl font-semibold mb-4">Leads por Etapa (Pizza)</h2>
+              <ResponsiveContainer width="100%" height={300}>
+                <PieChart>
+                  <Pie
+                    data={stats.leadsByStage}
+                    cx="50%"
+                    cy="50%"
+                    labelLine={false}
+                    label={({ stage_name, count }) => `${stage_name}: ${count}`}
+                    outerRadius={100}
+                    fill="#8884d8"
+                    dataKey="count"
+                  >
+                    {stats.leadsByStage.map((entry, index) => (
+                      <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                    ))}
+                  </Pie>
+                  <Tooltip />
+                </PieChart>
+              </ResponsiveContainer>
+            </div>
+          </div>
+        ) : (
           <div className="mt-8 bg-white rounded-lg shadow p-8 text-center">
             <p className="text-gray-600 mb-4">Ainda não há leads cadastrados</p>
             <button
