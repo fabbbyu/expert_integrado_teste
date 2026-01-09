@@ -25,7 +25,10 @@ interface Lead {
   id: string
   name: string
   email: string | null
+  phone: string | null
   company: string | null
+  position: string | null
+  source: string | null
   stage_id: string
   funnel_stages: {
     name: string
@@ -36,6 +39,7 @@ interface Stage {
   id: string
   name: string
   order: number
+  required_fields: string[]
 }
 
 export default function LeadsPage() {
@@ -76,7 +80,16 @@ export default function LeadsPage() {
         .order('order')
 
       if (stagesError) throw stagesError
-      setStages(stagesData || [])
+      
+      // Converter required_fields de JSONB para array
+      const formattedStages = (stagesData || []).map((stage: any) => ({
+        ...stage,
+        required_fields: Array.isArray(stage.required_fields) 
+          ? stage.required_fields 
+          : [],
+      }))
+      
+      setStages(formattedStages)
 
       // Carregar leads
       const { data: leadsData, error: leadsError } = await supabase
@@ -85,7 +98,10 @@ export default function LeadsPage() {
           id,
           name,
           email,
+          phone,
           company,
+          position,
+          source,
           stage_id,
           funnel_stages (
             name
@@ -106,6 +122,26 @@ export default function LeadsPage() {
     return leads.filter((lead) => lead.stage_id === stageId)
   }
 
+  const validateRequiredFields = (lead: Lead, stage: Stage): string[] => {
+    const missingFields: string[] = []
+    const fieldMap: Record<string, string> = {
+      name: 'Nome',
+      email: 'Email',
+      phone: 'Telefone',
+      company: 'Empresa',
+      position: 'Cargo',
+    }
+
+    stage.required_fields.forEach((field) => {
+      const value = lead[field as keyof Lead]
+      if (!value || (typeof value === 'string' && value.trim() === '')) {
+        missingFields.push(fieldMap[field] || field)
+      }
+    })
+
+    return missingFields
+  }
+
   const handleDragEnd = async (event: DragEndEvent) => {
     const { active, over } = event
     setActiveId(null)
@@ -115,10 +151,28 @@ export default function LeadsPage() {
     const leadId = active.id as string
     const newStageId = over.id as string
 
+    // Buscar lead e etapa destino
+    const lead = leads.find((l) => l.id === leadId)
+    const targetStage = stages.find((s) => s.id === newStageId)
+
+    if (!lead || !targetStage) return
+
+    // Validar campos obrigatórios
+    const missingFields = validateRequiredFields(lead, targetStage)
+    
+    if (missingFields.length > 0) {
+      alert(
+        `Não é possível mover este lead para "${targetStage.name}".\n\n` +
+        `Campos obrigatórios faltando:\n${missingFields.join('\n')}\n\n` +
+        `Preencha os campos antes de mover.`
+      )
+      return
+    }
+
     // Atualizar localmente primeiro (otimista)
     setLeads((prevLeads) =>
-      prevLeads.map((lead) =>
-        lead.id === leadId ? { ...lead, stage_id: newStageId } : lead
+      prevLeads.map((l) =>
+        l.id === leadId ? { ...l, stage_id: newStageId } : l
       )
     )
 
@@ -132,6 +186,7 @@ export default function LeadsPage() {
       if (error) throw error
     } catch (error) {
       console.error('Erro ao mover lead:', error)
+      alert('Erro ao mover lead. Tente novamente.')
       // Reverter se der erro
       loadData(currentWorkspaceId!)
     }

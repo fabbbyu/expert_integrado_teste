@@ -8,7 +8,10 @@ interface Lead {
   id: string
   name: string
   email: string | null
+  phone: string | null
   company: string | null
+  position: string | null
+  source: string | null
   stage_id: string
 }
 
