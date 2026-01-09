@@ -5,6 +5,21 @@ import { supabase } from '@/lib/supabase/client'
 import { useAuth } from '@/lib/hooks/use-auth'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
+import {
+  DndContext,
+  DragOverlay,
+  closestCenter,
+  KeyboardSensor,
+  PointerSensor,
+  useSensor,
+  useSensors,
+  DragEndEvent,
+} from '@dnd-kit/core'
+import {
+  sortableKeyboardCoordinates,
+} from '@dnd-kit/sortable'
+import StageColumn from '@/components/StageColumn'
+import LeadCard from '@/components/LeadCard'
 
 interface Lead {
   id: string
@@ -30,6 +45,14 @@ export default function LeadsPage() {
   const [stages, setStages] = useState<Stage[]>([])
   const [leads, setLeads] = useState<Lead[]>([])
   const [loading, setLoading] = useState(true)
+  const [activeId, setActiveId] = useState<string | null>(null)
+  
+  const sensors = useSensors(
+    useSensor(PointerSensor),
+    useSensor(KeyboardSensor, {
+      coordinateGetter: sortableKeyboardCoordinates,
+    })
+  )
 
   useEffect(() => {
     if (typeof window !== 'undefined') {
@@ -83,6 +106,41 @@ export default function LeadsPage() {
     return leads.filter((lead) => lead.stage_id === stageId)
   }
 
+  const handleDragEnd = async (event: DragEndEvent) => {
+    const { active, over } = event
+    setActiveId(null)
+
+    if (!over || active.id === over.id) return
+
+    const leadId = active.id as string
+    const newStageId = over.id as string
+
+    // Atualizar localmente primeiro (otimista)
+    setLeads((prevLeads) =>
+      prevLeads.map((lead) =>
+        lead.id === leadId ? { ...lead, stage_id: newStageId } : lead
+      )
+    )
+
+    // Atualizar no banco
+    try {
+      const { error } = await supabase
+        .from('leads')
+        .update({ stage_id: newStageId })
+        .eq('id', leadId)
+
+      if (error) throw error
+    } catch (error) {
+      console.error('Erro ao mover lead:', error)
+      // Reverter se der erro
+      loadData(currentWorkspaceId!)
+    }
+  }
+
+  const handleDragStart = (event: any) => {
+    setActiveId(event.active.id)
+  }
+
   if (authLoading || loading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
@@ -107,33 +165,34 @@ export default function LeadsPage() {
           </Link>
         </div>
 
-        {/* Board Kanban simples */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 xl:grid-cols-7 gap-4">
-          {stages.map((stage) => {
-            const stageLeads = getLeadsByStage(stage.id)
-            return (
-              <div key={stage.id} className="bg-white rounded-lg shadow p-4">
-                <h3 className="font-semibold mb-4 text-sm">
-                  {stage.name} ({stageLeads.length})
-                </h3>
-                <div className="space-y-2">
-                  {stageLeads.map((lead) => (
-                    <Link
-                      key={lead.id}
-                      href={`/leads/${lead.id}`}
-                      className="block p-3 bg-gray-50 rounded hover:bg-gray-100 cursor-pointer"
-                    >
-                      <p className="font-medium text-sm">{lead.name}</p>
-                      {lead.company && (
-                        <p className="text-xs text-gray-500 mt-1">{lead.company}</p>
-                      )}
-                    </Link>
-                  ))}
-                </div>
-              </div>
-            )
-          })}
-        </div>
+        {/* Board Kanban com drag and drop */}
+        <DndContext
+          sensors={sensors}
+          collisionDetection={closestCenter}
+          onDragStart={handleDragStart}
+          onDragEnd={handleDragEnd}
+        >
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 xl:grid-cols-7 gap-4">
+            {stages.map((stage) => {
+              const stageLeads = getLeadsByStage(stage.id)
+              return (
+                <StageColumn
+                  key={stage.id}
+                  stage={stage}
+                  leads={stageLeads}
+                />
+              )
+            })}
+          </div>
+          <DragOverlay>
+            {activeId ? (
+              <LeadCard
+                lead={leads.find((l) => l.id === activeId)!}
+                isDragging
+              />
+            ) : null}
+          </DragOverlay>
+        </DndContext>
 
         {stages.length === 0 && (
           <div className="bg-white rounded-lg shadow p-8 text-center">
