@@ -225,16 +225,30 @@ export default function LeadDetailPage() {
       const { data: { session } } = await supabase.auth.getSession()
       if (!session) throw new Error('Não autenticado')
 
+      console.log('Chamando Edge Function generate-message...')
+      console.log('Lead ID:', leadId)
+      console.log('Campaign ID:', selectedCampaignId)
+      console.log('Supabase URL:', process.env.NEXT_PUBLIC_SUPABASE_URL)
+      console.log('Session token:', session.access_token ? 'Presente' : 'Ausente')
+
       const { data, error } = await supabase.functions.invoke('generate-message', {
         body: {
           leadId: leadId,
           campaignId: selectedCampaignId,
         },
+        headers: {
+          Authorization: `Bearer ${session.access_token}`,
+        },
       })
 
-      if (error) throw error
+      console.log('Resposta da função:', { data, error })
 
-      if (data.messages) {
+      if (error) {
+        console.error('Erro detalhado:', error)
+        throw error
+      }
+
+      if (data && data.messages) {
         await loadGeneratedMessages()
         
         // Registrar atividade
@@ -253,11 +267,14 @@ export default function LeadDetailPage() {
         
         alert('Mensagens geradas com sucesso!')
       } else {
-        throw new Error('Erro ao gerar mensagens')
+        throw new Error('Erro ao gerar mensagens: resposta inválida')
       }
     } catch (error: any) {
-      console.error('Erro ao gerar mensagens:', error)
-      alert(translateError(error) || 'Erro ao gerar mensagens. Tente novamente.')
+      console.error('Erro completo ao gerar mensagens:', error)
+      console.error('Tipo do erro:', typeof error)
+      console.error('Mensagem do erro:', error?.message)
+      console.error('Código do erro:', error?.code)
+      alert(translateError(error) || `Erro ao gerar mensagens: ${error?.message || 'Erro desconhecido'}`)
     } finally {
       setGenerating(false)
     }

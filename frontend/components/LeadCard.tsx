@@ -57,15 +57,16 @@ export default function LeadCard({ lead, isDragging = false }: LeadCardProps) {
       ref={setNodeRef}
       style={style}
       {...attributes}
-      {...listeners}
-      className="p-3 bg-white border-2 border-gray-200 rounded-md hover:bg-blue-50 hover:border-blue-300 cursor-grab active:cursor-grabbing shadow-sm"
+      className="p-3 bg-white border-2 border-gray-200 rounded-md hover:bg-blue-50 hover:border-blue-300 shadow-sm"
     >
-      <Link href={`/leads/${lead.id}`} className="block">
-        <p className="font-semibold text-sm text-gray-900">{lead.name}</p>
-        {lead.company && (
-          <p className="text-xs text-gray-700 mt-1 font-medium">{lead.company}</p>
-        )}
-      </Link>
+      <div {...listeners} className="cursor-grab active:cursor-grabbing">
+        <Link href={`/leads/${lead.id}`} className="block">
+          <p className="font-semibold text-sm text-gray-900">{lead.name}</p>
+          {lead.company && (
+            <p className="text-xs text-gray-700 mt-1 font-medium">{lead.company}</p>
+          )}
+        </Link>
+      </div>
     </div>
   )
 }

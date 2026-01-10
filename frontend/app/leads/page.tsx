@@ -61,7 +61,11 @@ export default function LeadsPage() {
   const [activeId, setActiveId] = useState<string | null>(null)
   
   const sensors = useSensors(
-    useSensor(PointerSensor),
+    useSensor(PointerSensor, {
+      activationConstraint: {
+        distance: 8, // Precisa mover pelo menos 8px para ativar o drag
+      },
+    }),
     useSensor(KeyboardSensor, {
       coordinateGetter: sortableKeyboardCoordinates,
     })
