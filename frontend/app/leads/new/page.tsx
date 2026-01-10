@@ -125,26 +125,37 @@ export default function NewLeadPage() {
 
   const loadWorkspaceMembers = async (workspaceId: string) => {
     try {
-      const { data, error } = await supabase
+      // Buscar membros do workspace
+      const { data: membersData, error: membersError } = await supabase
         .from('workspace_members')
-        .select(`
-          user_id,
-          users (
-            id,
-            full_name
-          )
-        `)
+        .select('user_id')
         .eq('workspace_id', workspaceId)
 
-      if (error) throw error
+      if (membersError) throw membersError
 
-      const members = (data || [])
-        .map((item: any) => item.users)
-        .filter((user: any) => user !== null)
+      if (!membersData || membersData.length === 0) {
+        setWorkspaceMembers([])
+        return
+      }
 
-      setWorkspaceMembers(members)
+      // Buscar dados dos usuários separadamente
+      const userIds = membersData.map((m: any) => m.user_id)
+      const { data: usersData, error: usersError } = await supabase
+        .from('users')
+        .select('id, full_name')
+        .in('id', userIds)
+
+      if (usersError) {
+        console.error('Erro ao buscar usuários:', usersError)
+        // Fallback: usar apenas os IDs
+        setWorkspaceMembers(userIds.map((id: string) => ({ id, full_name: null })))
+        return
+      }
+
+      setWorkspaceMembers(usersData || [])
     } catch (error) {
       console.error('Erro ao carregar membros:', error)
+      setWorkspaceMembers([])
     }
   }
 
