@@ -15,6 +15,7 @@ import {
   SelectValue,
 } from '@/components/ui/Select'
 import Link from 'next/link'
+import { translateError } from '@/lib/utils/error-translations'
 
 interface Invite {
   id: string
@@ -126,7 +127,7 @@ export default function InvitesPage() {
       loadInvites()
     } catch (error: any) {
       console.error('Erro ao enviar convite:', error)
-      alert(error.message || 'Erro ao enviar convite. Tente novamente.')
+      alert(translateError(error) || 'Erro ao enviar convite. Tente novamente.')
     } finally {
       setSending(false)
     }
@@ -144,9 +145,9 @@ export default function InvitesPage() {
     return (
       <div className="min-h-screen bg-gray-50 py-8">
         <div className="max-w-4xl mx-auto px-4">
-          <div className="bg-white rounded-lg shadow p-8 text-center">
-            <h1 className="text-2xl font-bold mb-4">Acesso Negado</h1>
-            <p className="text-gray-600 mb-4">
+          <div className="bg-white rounded-lg shadow-md border border-gray-200 p-8 text-center">
+            <h1 className="text-2xl font-bold mb-4 text-gray-900">Acesso Negado</h1>
+            <p className="text-gray-700 mb-4 font-medium">
               Apenas administradores podem gerenciar convites.
             </p>
             <Link href="/workspaces">
@@ -167,8 +168,8 @@ export default function InvitesPage() {
           </Link>
         </div>
 
-        <div className="bg-white rounded-lg shadow p-8 mb-6">
-          <h1 className="text-3xl font-bold mb-6">Convidar Usuários</h1>
+        <div className="bg-white rounded-lg shadow-md border border-gray-200 p-8 mb-6">
+          <h1 className="text-3xl font-bold mb-6 text-gray-900">Convidar Usuários</h1>
 
           <form onSubmit={sendInvite} className="space-y-4">
             <div>
@@ -202,10 +203,10 @@ export default function InvitesPage() {
           </form>
         </div>
 
-        <div className="bg-white rounded-lg shadow p-8">
-          <h2 className="text-2xl font-bold mb-4">Convites Enviados</h2>
+        <div className="bg-white rounded-lg shadow-md border border-gray-200 p-8">
+          <h2 className="text-2xl font-bold mb-4 text-gray-900">Convites Enviados</h2>
           {invites.length === 0 ? (
-            <p className="text-gray-500">Nenhum convite enviado ainda.</p>
+            <p className="text-gray-700 font-medium">Nenhum convite enviado ainda.</p>
           ) : (
             <div className="space-y-3">
               {invites.map((invite) => (
@@ -215,7 +216,7 @@ export default function InvitesPage() {
                 >
                   <div>
                     <p className="font-medium">{invite.email}</p>
-                    <p className="text-sm text-gray-500">
+                    <p className="text-sm text-gray-700 font-medium">
                       {invite.role === 'admin' ? 'Administrador' : 'Membro'} •{' '}
                       {invite.accepted_at
                         ? `Aceito em ${new Date(invite.accepted_at).toLocaleDateString('pt-BR')}`

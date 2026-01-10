@@ -133,16 +133,16 @@ export default function FunnelConfigPage() {
     <div className="min-h-screen bg-gray-50 py-8">
       <div className="max-w-4xl mx-auto px-4">
         <div className="bg-white rounded-lg shadow p-8">
-          <h1 className="text-3xl font-bold mb-6">Configuração do Funil</h1>
-          <p className="text-gray-600 mb-6">
+          <h1 className="text-3xl font-bold mb-6 text-gray-900">Configuração do Funil</h1>
+          <p className="text-gray-700 mb-6 font-medium">
             Configure quais campos são obrigatórios para cada etapa do funil
           </p>
 
           <div className="space-y-6">
             {stages.map((stage) => (
               <div key={stage.id} className="border border-gray-200 rounded-lg p-6">
-                <h3 className="text-lg font-semibold mb-4">{stage.name}</h3>
-                <p className="text-sm text-gray-500 mb-4">
+                <h3 className="text-lg font-bold mb-4 text-gray-900">{stage.name}</h3>
+                <p className="text-sm text-gray-700 mb-4 font-medium">
                   Campos obrigatórios para esta etapa:
                 </p>
                 <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
@@ -160,13 +160,13 @@ export default function FunnelConfigPage() {
                           disabled={saving}
                           className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
                         />
-                        <span className="text-sm text-gray-700">{field.label}</span>
+                        <span className="text-sm text-gray-900 font-semibold">{field.label}</span>
                       </label>
                     )
                   })}
                 </div>
                 {stage.required_fields.length === 0 && (
-                  <p className="text-sm text-gray-400 mt-2 italic">
+                  <p className="text-sm text-gray-600 mt-2 italic font-medium">
                     Nenhum campo obrigatório configurado
                   </p>
                 )}
@@ -176,7 +176,7 @@ export default function FunnelConfigPage() {
 
           {stages.length === 0 && (
             <div className="text-center py-12">
-              <p className="text-gray-600">Carregando etapas...</p>
+              <p className="text-gray-700 font-medium">Carregando etapas...</p>
             </div>
           )}
         </div>

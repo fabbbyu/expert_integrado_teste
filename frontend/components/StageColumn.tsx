@@ -36,11 +36,11 @@ export default function StageColumn({ stage, leads }: StageColumnProps) {
   return (
     <div
       ref={setNodeRef}
-      className={`bg-white rounded-lg shadow p-4 min-h-[200px] ${
-        isOver ? 'bg-blue-50 border-2 border-blue-500' : ''
+      className={`bg-white rounded-lg shadow-md border-2 border-gray-200 p-4 min-h-[200px] ${
+        isOver ? 'bg-blue-50 border-blue-500' : ''
       }`}
     >
-      <h3 className="font-semibold mb-4 text-sm">
+      <h3 className="font-bold mb-4 text-sm text-gray-900">
         {stage.name} ({leads.length})
       </h3>
       <SortableContext items={leads.map((l) => l.id)} strategy={verticalListSortingStrategy}>

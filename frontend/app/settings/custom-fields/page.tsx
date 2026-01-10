@@ -138,11 +138,11 @@ export default function CustomFieldsPage() {
   return (
     <div className="min-h-screen bg-gray-50 py-8">
       <div className="max-w-4xl mx-auto px-4">
-        <div className="bg-white rounded-lg shadow p-8">
+        <div className="bg-white rounded-lg shadow-md border border-gray-200 p-8">
           <div className="flex justify-between items-center mb-6">
             <div>
-              <h1 className="text-3xl font-bold">Campos Personalizados</h1>
-              <p className="text-gray-600 mt-2">
+              <h1 className="text-3xl font-bold text-gray-900">Campos Personalizados</h1>
+              <p className="text-gray-700 mt-2 font-medium">
                 Crie campos adicionais para seus leads
               </p>
             </div>
@@ -162,7 +162,7 @@ export default function CustomFieldsPage() {
             <form onSubmit={handleSubmit} className="mb-6 p-4 bg-gray-50 rounded">
               <div className="space-y-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                  <label className="block text-sm font-semibold text-gray-900 mb-1">
                     Nome do Campo *
                   </label>
                   <input
@@ -176,7 +176,7 @@ export default function CustomFieldsPage() {
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                  <label className="block text-sm font-semibold text-gray-900 mb-1">
                     Tipo *
                   </label>
                   <select
@@ -198,7 +198,7 @@ export default function CustomFieldsPage() {
 
                 {formData.type === 'select' && (
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                    <label className="block text-sm font-semibold text-gray-900 mb-1">
                       Opções (separadas por vírgula) *
                     </label>
                     <input
@@ -226,7 +226,7 @@ export default function CustomFieldsPage() {
                       setEditingField(null)
                       setFormData({ name: '', type: 'text', options: '' })
                     }}
-                    className="px-4 py-2 bg-gray-200 text-gray-700 rounded hover:bg-gray-300"
+                    className="px-4 py-2 bg-gray-200 text-gray-900 rounded hover:bg-gray-300 font-semibold"
                   >
                     Cancelar
                   </button>
@@ -237,8 +237,8 @@ export default function CustomFieldsPage() {
 
           {fields.length === 0 ? (
             <div className="text-center py-12">
-              <p className="text-gray-600 mb-4">Ainda não há campos personalizados</p>
-              <p className="text-sm text-gray-500">
+              <p className="text-gray-700 mb-4 font-medium">Ainda não há campos personalizados</p>
+              <p className="text-sm text-gray-600 font-medium">
                 Crie campos para coletar informações específicas dos seus leads
               </p>
             </div>
@@ -251,7 +251,7 @@ export default function CustomFieldsPage() {
                 >
                   <div>
                     <p className="font-medium">{field.name}</p>
-                    <p className="text-sm text-gray-500">
+                    <p className="text-sm text-gray-700 font-medium">
                       Tipo: {field.type}
                       {field.options && ` (${field.options.length} opções)`}
                     </p>
@@ -259,13 +259,13 @@ export default function CustomFieldsPage() {
                   <div className="flex gap-2">
                     <button
                       onClick={() => handleEdit(field)}
-                      className="px-3 py-1 text-sm text-blue-600 hover:text-blue-700"
+                      className="px-3 py-1 text-sm text-blue-600 hover:text-blue-700 font-semibold"
                     >
                       Editar
                     </button>
                     <button
                       onClick={() => handleDelete(field.id)}
-                      className="px-3 py-1 text-sm text-red-600 hover:text-red-700"
+                      className="px-3 py-1 text-sm text-red-600 hover:text-red-700 font-semibold"
                     >
                       Excluir
                     </button>

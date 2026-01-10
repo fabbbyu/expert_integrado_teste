@@ -6,6 +6,7 @@ import { useAuth } from '@/lib/hooks/use-auth'
 import { useRouter, useParams } from 'next/navigation'
 import Link from 'next/link'
 import { createActivityLog } from '@/lib/utils/activity-log'
+import { translateError } from '@/lib/utils/error-translations'
 
 interface Lead {
   id: string
@@ -256,7 +257,7 @@ export default function LeadDetailPage() {
       }
     } catch (error: any) {
       console.error('Erro ao gerar mensagens:', error)
-      alert(error.message || 'Erro ao gerar mensagens. Tente novamente.')
+      alert(translateError(error) || 'Erro ao gerar mensagens. Tente novamente.')
     } finally {
       setGenerating(false)
     }
@@ -339,22 +340,22 @@ export default function LeadDetailPage() {
           </Link>
         </div>
 
-        <div className="bg-white rounded-lg shadow p-8">
+        <div className="bg-white rounded-lg shadow-md border border-gray-200 p-8">
           <div className="flex justify-between items-start mb-6">
             <div>
-              <h1 className="text-3xl font-bold">{lead.name}</h1>
+              <h1 className="text-3xl font-bold text-gray-900">{lead.name}</h1>
               {lead.company && (
-                <p className="text-gray-600 mt-1">{lead.company}</p>
+                <p className="text-gray-700 mt-1 font-medium">{lead.company}</p>
               )}
             </div>
-            <span className="px-3 py-1 bg-blue-100 text-blue-800 rounded text-sm">
+            <span className="px-3 py-1 bg-blue-100 text-blue-700 rounded-md text-sm font-semibold">
               {lead.funnel_stages?.name || 'Sem etapa'}
             </span>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div>
-              <h3 className="text-sm font-medium text-gray-500 mb-2">Informações de Contato</h3>
+              <h3 className="text-sm font-bold text-gray-900 mb-2">Informações de Contato</h3>
               <div className="space-y-2">
                 {lead.email && (
                   <p>
@@ -370,7 +371,7 @@ export default function LeadDetailPage() {
             </div>
 
             <div>
-              <h3 className="text-sm font-medium text-gray-500 mb-2">Informações Profissionais</h3>
+              <h3 className="text-sm font-bold text-gray-900 mb-2">Informações Profissionais</h3>
               <div className="space-y-2">
                 {lead.position && (
                   <p>
@@ -394,19 +395,19 @@ export default function LeadDetailPage() {
 
           {lead.notes && (
             <div className="mt-6">
-              <h3 className="text-sm font-medium text-gray-500 mb-2">Observações</h3>
-              <p className="text-gray-700 whitespace-pre-wrap">{lead.notes}</p>
+              <h3 className="text-sm font-bold text-gray-900 mb-2">Observações</h3>
+              <p className="text-gray-800 whitespace-pre-wrap font-medium">{lead.notes}</p>
             </div>
           )}
 
           {getCustomFieldsData() && (
             <div className="mt-6">
-              <h3 className="text-sm font-medium text-gray-500 mb-2">Campos Personalizados</h3>
+              <h3 className="text-sm font-bold text-gray-900 mb-2">Campos Personalizados</h3>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 {Object.entries(getCustomFieldsData() || {}).map(([key, value]) => (
                   <div key={key}>
-                    <span className="font-medium text-sm">{key}:</span>{' '}
-                    <span className="text-gray-700">{String(value)}</span>
+                    <span className="font-semibold text-sm text-gray-900">{key}:</span>{' '}
+                    <span className="text-gray-800 font-medium">{String(value)}</span>
                   </div>
                 ))}
               </div>
@@ -414,10 +415,10 @@ export default function LeadDetailPage() {
           )}
 
           <div className="mt-8 pt-6 border-t">
-            <h2 className="text-2xl font-bold mb-4">Gerar Mensagens com IA</h2>
+            <h2 className="text-2xl font-bold mb-4 text-gray-900">Gerar Mensagens com IA</h2>
 
             <div className="mb-4">
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+              <label className="block text-sm font-semibold text-gray-900 mb-2">
                 Selecionar Campanha
               </label>
               <select
@@ -448,14 +449,14 @@ export default function LeadDetailPage() {
             {generatedMessages.length > 0 && (
               <div className="space-y-4">
                 <h3 className="text-lg font-semibold">Mensagens Geradas</h3>
-                <p className="text-sm text-gray-500 mb-4">
+                <p className="text-sm text-gray-700 mb-4 font-medium">
                   {generatedMessages[0].campaigns?.name} - Gerado em{' '}
                   {new Date(generatedMessages[0].generated_at).toLocaleString('pt-BR')}
                 </p>
                 {generatedMessages[0].messages.map((message, index) => (
                   <div key={index} className="bg-gray-50 p-4 rounded-lg border">
                     <div className="flex justify-between items-start mb-2">
-                      <span className="text-sm text-gray-500">
+                      <span className="text-sm text-gray-700 font-medium">
                         Variação {index + 1}
                       </span>
                       <div className="flex gap-2">
@@ -473,13 +474,13 @@ export default function LeadDetailPage() {
                         </button>
                       </div>
                     </div>
-                    <p className="text-gray-700 whitespace-pre-wrap">{message}</p>
+                    <p className="text-gray-800 whitespace-pre-wrap font-medium">{message}</p>
                   </div>
                 ))}
                 <button
                   onClick={generateMessages}
                   disabled={generating || !selectedCampaignId}
-                  className="text-sm text-gray-600 hover:text-gray-800"
+                  className="text-sm text-blue-600 hover:text-blue-700 font-semibold"
                 >
                   Regenerar mensagens
                 </button>
@@ -491,7 +492,7 @@ export default function LeadDetailPage() {
           <div className="mt-8 pt-6 border-t">
             <h2 className="text-2xl font-bold mb-4">Histórico de Atividades</h2>
             {activityLogs.length === 0 ? (
-              <p className="text-gray-500">Nenhuma atividade registrada ainda.</p>
+              <p className="text-gray-700 font-medium">Nenhuma atividade registrada ainda.</p>
             ) : (
               <div className="space-y-3">
                 {activityLogs.map((log) => (
@@ -499,7 +500,7 @@ export default function LeadDetailPage() {
                     key={log.id}
                     className="bg-gray-50 rounded-lg p-4 border border-gray-200"
                   >
-                    <p className="text-sm text-gray-700">{formatActivityMessage(log)}</p>
+                    <p className="text-sm text-gray-800 font-medium">{formatActivityMessage(log)}</p>
                   </div>
                 ))}
               </div>

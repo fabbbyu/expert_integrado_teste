@@ -92,12 +92,12 @@ export default function NewCampaignPage() {
   return (
     <div className="min-h-screen bg-gray-50 py-8">
       <div className="max-w-4xl mx-auto px-4">
-        <div className="bg-white rounded-lg shadow p-8">
-          <h1 className="text-3xl font-bold mb-6">Nova Campanha</h1>
+        <div className="bg-white rounded-lg shadow-md border border-gray-200 p-8">
+          <h1 className="text-3xl font-bold mb-6 text-gray-900">Nova Campanha</h1>
 
           <form onSubmit={handleSubmit} className="space-y-6">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
+              <label className="block text-sm font-semibold text-gray-900 mb-1">
                 Nome da Campanha *
               </label>
               <input
@@ -111,10 +111,10 @@ export default function NewCampaignPage() {
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
+              <label className="block text-sm font-semibold text-gray-900 mb-1">
                 Contexto *
               </label>
-              <p className="text-xs text-gray-500 mb-2">
+              <p className="text-xs text-gray-600 mb-2 font-medium">
                 Informações sobre a oferta, produto, período, etc. que a IA usará para gerar mensagens
               </p>
               <textarea
@@ -128,10 +128,10 @@ export default function NewCampaignPage() {
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
+              <label className="block text-sm font-semibold text-gray-900 mb-1">
                 Prompt de Geração *
               </label>
-              <p className="text-xs text-gray-500 mb-2">
+              <p className="text-xs text-gray-600 mb-2 font-medium">
                 Instruções para a IA: tom de voz, formato, persona, etc.
               </p>
               <textarea
@@ -150,10 +150,10 @@ export default function NewCampaignPage() {
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
+              <label className="block text-sm font-semibold text-gray-900 mb-1">
                 Etapa Gatilho (opcional)
               </label>
-              <p className="text-xs text-gray-500 mb-2">
+              <p className="text-xs text-gray-600 mb-2 font-medium">
                 Se selecionada, mensagens serão geradas automaticamente quando lead chegar nesta etapa
               </p>
               <select
@@ -178,7 +178,7 @@ export default function NewCampaignPage() {
                 onChange={(e) => setFormData({ ...formData, is_active: e.target.checked })}
                 className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
               />
-              <label htmlFor="is_active" className="ml-2 block text-sm text-gray-700">
+              <label htmlFor="is_active" className="ml-2 block text-sm text-gray-900 font-semibold">
                 Campanha ativa
               </label>
             </div>
@@ -194,7 +194,7 @@ export default function NewCampaignPage() {
               <button
                 type="button"
                 onClick={() => router.back()}
-                className="px-4 py-2 bg-gray-200 text-gray-700 rounded hover:bg-gray-300"
+                className="px-4 py-2 bg-gray-200 text-gray-900 rounded hover:bg-gray-300 font-semibold"
               >
                 Cancelar
               </button>

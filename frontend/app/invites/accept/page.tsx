@@ -6,6 +6,7 @@ import { useAuth } from '@/lib/hooks/use-auth'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { Button } from '@/components/ui/Button'
 import Link from 'next/link'
+import { translateError } from '@/lib/utils/error-translations'
 
 export default function AcceptInvitePage() {
   const { user, loading: authLoading } = useAuth()
@@ -46,7 +47,7 @@ export default function AcceptInvitePage() {
 
       if (inviteError) throw inviteError
 
-      if (inviteError || !data) {
+      if (!data) {
         setError('Convite não encontrado')
         return
       }
@@ -64,7 +65,7 @@ export default function AcceptInvitePage() {
       setWorkspaceName(data.workspaces?.name || 'Workspace')
     } catch (error: any) {
       console.error('Erro ao carregar convite:', error)
-      setError('Erro ao carregar informações do convite')
+      setError(translateError(error) || 'Erro ao carregar informações do convite')
     } finally {
       setLoading(false)
     }
@@ -99,7 +100,7 @@ export default function AcceptInvitePage() {
       router.push('/workspaces')
     } catch (error: any) {
       console.error('Erro ao aceitar convite:', error)
-      setError(error.message || 'Erro ao aceitar convite. Tente novamente.')
+      setError(translateError(error) || 'Erro ao aceitar convite. Tente novamente.')
     } finally {
       setAccepting(false)
     }
@@ -117,9 +118,9 @@ export default function AcceptInvitePage() {
     return (
       <div className="min-h-screen bg-gray-50 py-8">
         <div className="max-w-md mx-auto px-4">
-          <div className="bg-white rounded-lg shadow p-8 text-center">
+          <div className="bg-white rounded-lg shadow-md border border-gray-200 p-8 text-center">
             <h1 className="text-2xl font-bold mb-4 text-red-600">Erro</h1>
-            <p className="text-gray-600 mb-6">{error}</p>
+            <p className="text-gray-800 mb-6 font-semibold">{error}</p>
             <Link href="/workspaces">
               <Button>Voltar para Workspaces</Button>
             </Link>
@@ -133,9 +134,9 @@ export default function AcceptInvitePage() {
     return (
       <div className="min-h-screen bg-gray-50 py-8">
         <div className="max-w-md mx-auto px-4">
-          <div className="bg-white rounded-lg shadow p-8 text-center">
-            <h1 className="text-2xl font-bold mb-4">Faça login para aceitar o convite</h1>
-            <p className="text-gray-600 mb-6">
+          <div className="bg-white rounded-lg shadow-md border border-gray-200 p-8 text-center">
+            <h1 className="text-2xl font-bold mb-4 text-gray-900">Faça login para aceitar o convite</h1>
+            <p className="text-gray-700 mb-6 font-medium">
               Você precisa estar logado para aceitar o convite para o workspace{' '}
               <strong>{workspaceName}</strong>.
             </p>
@@ -151,8 +152,8 @@ export default function AcceptInvitePage() {
   return (
     <div className="min-h-screen bg-gray-50 py-8">
       <div className="max-w-md mx-auto px-4">
-        <div className="bg-white rounded-lg shadow p-8 text-center">
-          <h1 className="text-2xl font-bold mb-4">Aceitar Convite</h1>
+        <div className="bg-white rounded-lg shadow-md border border-gray-200 p-8 text-center">
+          <h1 className="text-2xl font-bold mb-4 text-gray-900">Aceitar Convite</h1>
           <p className="text-gray-600 mb-6">
             Você foi convidado para participar do workspace <strong>{workspaceName}</strong>.
           </p>

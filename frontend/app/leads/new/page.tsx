@@ -8,6 +8,7 @@ import { useAuth } from '@/lib/hooks/use-auth'
 import { useRouter } from 'next/navigation'
 import { createActivityLog } from '@/lib/utils/activity-log'
 import { leadSchema, type LeadFormData } from '@/lib/validations/lead'
+import { translateError } from '@/lib/utils/error-translations'
 import { Input } from '@/components/ui/Input'
 import { Textarea } from '@/components/ui/Textarea'
 import { Label } from '@/components/ui/Label'
@@ -209,7 +210,7 @@ export default function NewLeadPage() {
       router.push('/leads')
     } catch (error) {
       console.error('Erro ao criar lead:', error)
-      alert('Erro ao criar lead. Tente novamente.')
+      alert(translateError(error) || 'Erro ao criar lead. Tente novamente.')
     } finally {
       setSaving(false)
     }
@@ -226,8 +227,8 @@ export default function NewLeadPage() {
   return (
     <div className="min-h-screen bg-gray-50 py-8">
       <div className="max-w-2xl mx-auto px-4">
-        <div className="bg-white rounded-lg shadow p-8">
-          <h1 className="text-3xl font-bold mb-6">Novo Lead</h1>
+        <div className="bg-white rounded-lg shadow-md border border-gray-200 p-8">
+          <h1 className="text-3xl font-bold mb-6 text-gray-900">Novo Lead</h1>
 
           <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
             <div>
@@ -346,11 +347,11 @@ export default function NewLeadPage() {
             {/* Campos Personalizados */}
             {customFields.length > 0 && (
               <div className="pt-4 border-t">
-                <h3 className="text-lg font-semibold mb-4">Campos Personalizados</h3>
+                <h3 className="text-lg font-bold mb-4 text-gray-900">Campos Personalizados</h3>
                 <div className="space-y-4">
                   {customFields.map((field) => (
                     <div key={field.id}>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                      <label className="block text-sm font-semibold text-gray-900 mb-1">
                         {field.name}
                       </label>
                       {field.type === 'text' && (

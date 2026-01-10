@@ -2,7 +2,18 @@
 
 :root {
   --background: #ffffff;
-  --foreground: #171717;
+  --foreground: #111827; /* gray-900 - melhor contraste */
+  
+  /* Cores de texto */
+  --text-primary: #111827; /* gray-900 */
+  --text-secondary: #374151; /* gray-700 */
+  --text-tertiary: #4b5563; /* gray-600 */
+  
+  /* Cores de acento */
+  --accent-blue: #2563eb; /* blue-600 */
+  --accent-blue-hover: #1d4ed8; /* blue-700 */
+  --accent-green: #16a34a; /* green-600 */
+  --accent-red: #dc2626; /* red-600 */
 }
 
 @theme inline {

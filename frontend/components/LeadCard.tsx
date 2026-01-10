@@ -42,11 +42,11 @@ export default function LeadCard({ lead, isDragging = false }: LeadCardProps) {
     return (
       <div
         style={style}
-        className="p-3 bg-gray-50 rounded shadow-lg"
+        className="p-3 bg-white border-2 border-blue-300 rounded-md shadow-lg"
       >
-        <p className="font-medium text-sm">{lead.name}</p>
+        <p className="font-semibold text-sm text-gray-900">{lead.name}</p>
         {lead.company && (
-          <p className="text-xs text-gray-500 mt-1">{lead.company}</p>
+          <p className="text-xs text-gray-700 mt-1 font-medium">{lead.company}</p>
         )}
       </div>
     )
@@ -58,12 +58,12 @@ export default function LeadCard({ lead, isDragging = false }: LeadCardProps) {
       style={style}
       {...attributes}
       {...listeners}
-      className="p-3 bg-gray-50 rounded hover:bg-gray-100 cursor-grab active:cursor-grabbing"
+      className="p-3 bg-white border-2 border-gray-200 rounded-md hover:bg-blue-50 hover:border-blue-300 cursor-grab active:cursor-grabbing shadow-sm"
     >
       <Link href={`/leads/${lead.id}`} className="block">
-        <p className="font-medium text-sm">{lead.name}</p>
+        <p className="font-semibold text-sm text-gray-900">{lead.name}</p>
         {lead.company && (
-          <p className="text-xs text-gray-500 mt-1">{lead.company}</p>
+          <p className="text-xs text-gray-700 mt-1 font-medium">{lead.company}</p>
         )}
       </Link>
     </div>

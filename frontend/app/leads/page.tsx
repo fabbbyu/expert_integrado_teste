@@ -6,6 +6,7 @@ import { useAuth } from '@/lib/hooks/use-auth'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { createActivityLog } from '@/lib/utils/activity-log'
+import { translateError } from '@/lib/utils/error-translations'
 import {
   DndContext,
   DragOverlay,
@@ -310,16 +311,9 @@ export default function LeadsPage() {
       }
     } catch (error) {
       console.error('Erro ao mover lead:', error)
-      alert('Erro ao mover lead. Tente novamente.')
+      alert(translateError(error) || 'Erro ao mover lead. Tente novamente.')
       // Reverter se der erro
       loadData(currentWorkspaceId!)
-    } else {
-      // Atualizar lista local também
-      setAllLeads((prevLeads) =>
-        prevLeads.map((l) =>
-          l.id === leadId ? { ...l, stage_id: newStageId } : l
-        )
-      )
     }
   }
 
@@ -341,8 +335,8 @@ export default function LeadsPage() {
         <div className="mb-8">
           <div className="flex justify-between items-center mb-4">
             <div>
-              <h1 className="text-3xl font-bold">Leads</h1>
-              <p className="text-gray-600 mt-2">Gerencie seus leads</p>
+              <h1 className="text-3xl font-bold text-gray-900">Leads</h1>
+              <p className="text-gray-700 mt-2 font-medium">Gerencie seus leads</p>
             </div>
             <Link
               href="/leads/new"
@@ -356,7 +350,7 @@ export default function LeadsPage() {
           <div className="bg-white rounded-lg shadow p-4 mb-4">
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label className="block text-sm font-semibold text-gray-900 mb-1">
                   Buscar
                 </label>
                 <input
@@ -368,7 +362,7 @@ export default function LeadsPage() {
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label className="block text-sm font-semibold text-gray-900 mb-1">
                   Filtrar por Etapa
                 </label>
                 <select
@@ -385,7 +379,7 @@ export default function LeadsPage() {
                 </select>
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label className="block text-sm font-semibold text-gray-900 mb-1">
                   Filtrar por Responsável
                 </label>
                 <select
@@ -450,7 +444,7 @@ export default function LeadsPage() {
 
         {stages.length === 0 && (
           <div className="bg-white rounded-lg shadow p-8 text-center">
-            <p className="text-gray-600">Carregando etapas...</p>
+            <p className="text-gray-700 font-medium">Carregando etapas...</p>
           </div>
         )}
       </div>

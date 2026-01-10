@@ -250,7 +250,7 @@ O isolamento de dados foi garantido em múltiplas camadas:
    Crie arquivo `.env.local`:
    ```env
    NEXT_PUBLIC_SUPABASE_URL=https://seu-projeto.supabase.co
-   NEXT_PUBLIC_SUPABASE_ANON_KEY=sua-chave-anon
+   NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY=sua-chave-publishable
    ```
 
 4. **Configure Edge Functions**:
@@ -283,7 +283,7 @@ O isolamento de dados foi garantido em múltiplas camadas:
 1. Conecte repositório GitHub ao Vercel
 2. Configure variáveis de ambiente:
    - `NEXT_PUBLIC_SUPABASE_URL`
-   - `NEXT_PUBLIC_SUPABASE_ANON_KEY`
+   - `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY`
 3. Deploy automático a cada push
 
 ### Backend (Supabase)
