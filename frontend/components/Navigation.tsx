@@ -77,8 +77,8 @@ export default function Navigation() {
               >
                 Configurações
               </button>
-              <div className="absolute left-0 mt-1 w-48 bg-white rounded-md shadow-lg border border-gray-200 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition">
-                <div className="py-1">
+              <div className="absolute left-0 top-full pt-2 w-48 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition">
+                <div className="bg-white rounded-md shadow-lg border border-gray-200 py-1">
                   <Link
                     href="/settings/funnel"
                     className="block px-4 py-2 text-sm text-gray-900 hover:bg-blue-50 hover:text-blue-700 font-medium"
