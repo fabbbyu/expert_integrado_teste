@@ -57,6 +57,16 @@ export default function Navigation() {
             >
               Campanhas
             </Link>
+            <Link
+              href="/workspaces"
+              className={`px-3 py-2 rounded-md text-sm font-semibold transition-colors ${
+                isActive('/workspaces')
+                  ? 'bg-blue-100 text-blue-700'
+                  : 'text-gray-900 hover:bg-blue-50 hover:text-blue-700'
+              }`}
+            >
+              Workspaces
+            </Link>
             <div className="relative group">
               <button
                 className={`px-3 py-2 rounded-md text-sm font-semibold transition-colors ${
