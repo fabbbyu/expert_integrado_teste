@@ -66,27 +66,6 @@ export default function FunnelConfigPage() {
 
       setStages(formattedStages)
 
-      // Se não houver etapas, criar etapas padrão
-      if (formattedStages.length === 0) {
-        await createDefaultStages(workspaceId)
-        // Recarregar após criar
-        const { data: newStagesData, error: newStagesError } = await supabase
-          .from('funnel_stages')
-          .select('*')
-          .eq('workspace_id', workspaceId)
-          .order('order')
-
-        if (!newStagesError && newStagesData) {
-          const newFormattedStages = newStagesData.map((stage: any) => ({
-            ...stage,
-            required_fields: Array.isArray(stage.required_fields)
-              ? stage.required_fields
-              : [],
-          }))
-          setStages(newFormattedStages)
-        }
-      }
-
       // Carregar campos personalizados
       const { data: customFieldsData, error: customFieldsError } = await supabase
         .from('custom_fields')
@@ -108,29 +87,43 @@ export default function FunnelConfigPage() {
     }
   }
 
-  const createDefaultStages = async (workspaceId: string) => {
-    const defaultStages = [
-      { name: 'Base', order: 1, required_fields: [] },
-      { name: 'Lead Mapeado', order: 2, required_fields: ['name', 'company'] },
-      { name: 'Tentando Contato', order: 3, required_fields: ['name', 'email', 'phone'] },
-      { name: 'Conexão Iniciada', order: 4, required_fields: [] },
-      { name: 'Desqualificado', order: 5, required_fields: [] },
-      { name: 'Qualificado', order: 6, required_fields: [] },
-      { name: 'Reunião Agendada', order: 7, required_fields: [] },
-    ]
+  const createDefaultStages = async () => {
+    if (!currentWorkspaceId) return
 
-    const stagesToInsert = defaultStages.map((stage) => ({
-      workspace_id: workspaceId,
-      name: stage.name,
-      order: stage.order,
-      required_fields: stage.required_fields,
-    }))
+    setSaving(true)
+    try {
+      const defaultStages = [
+        { name: 'Base', order: 1, required_fields: [] },
+        { name: 'Lead Mapeado', order: 2, required_fields: ['name', 'company'] },
+        { name: 'Tentando Contato', order: 3, required_fields: ['name', 'email', 'phone'] },
+        { name: 'Conexão Iniciada', order: 4, required_fields: [] },
+        { name: 'Desqualificado', order: 5, required_fields: [] },
+        { name: 'Qualificado', order: 6, required_fields: [] },
+        { name: 'Reunião Agendada', order: 7, required_fields: [] },
+      ]
 
-    const { error } = await supabase.from('funnel_stages').insert(stagesToInsert)
+      const stagesToInsert = defaultStages.map((stage) => ({
+        workspace_id: currentWorkspaceId,
+        name: stage.name,
+        order: stage.order,
+        required_fields: stage.required_fields,
+      }))
 
-    if (error) {
+      const { error } = await supabase.from('funnel_stages').insert(stagesToInsert)
+
+      if (error) {
+        console.error('Erro ao criar etapas padrão:', error)
+        alert('Erro ao criar etapas. Tente novamente.')
+        return
+      }
+
+      // Recarregar etapas após criar
+      await loadData(currentWorkspaceId)
+    } catch (error) {
       console.error('Erro ao criar etapas padrão:', error)
-      throw error
+      alert('Erro ao criar etapas. Tente novamente.')
+    } finally {
+      setSaving(false)
     }
   }
 
@@ -223,10 +216,19 @@ export default function FunnelConfigPage() {
 
           {stages.length === 0 && !loading && (
             <div className="text-center py-12">
-              <p className="text-gray-700 font-medium mb-4">
-                Nenhuma etapa encontrada. As etapas padrão serão criadas automaticamente.
+              <p className="text-gray-700 font-medium mb-2">
+                Nenhuma etapa encontrada para este workspace.
               </p>
-              <p className="text-sm text-gray-600">Recarregue a página se as etapas não aparecerem.</p>
+              <p className="text-sm text-gray-600 mb-6">
+                Clique no botão abaixo para criar as etapas padrão do funil.
+              </p>
+              <button
+                onClick={createDefaultStages}
+                disabled={saving}
+                className="px-6 py-3 bg-blue-600 text-white rounded-md hover:bg-blue-700 shadow-sm font-semibold disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {saving ? 'Criando etapas...' : 'Criar Etapas Padrão'}
+              </button>
             </div>
           )}
         </div>
