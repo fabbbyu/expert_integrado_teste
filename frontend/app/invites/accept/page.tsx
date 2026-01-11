@@ -62,7 +62,11 @@ export default function AcceptInvitePage() {
         return
       }
 
-      setWorkspaceName(data.workspaces?.name || 'Workspace')
+      // workspaces pode vir como array ou objeto único
+      const workspace = Array.isArray(data.workspaces) 
+        ? data.workspaces[0] 
+        : data.workspaces
+      setWorkspaceName(workspace?.name || 'Workspace')
     } catch (error: any) {
       console.error('Erro ao carregar convite:', error)
       setError(translateError(error) || 'Erro ao carregar informações do convite')
