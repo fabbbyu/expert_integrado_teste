@@ -131,20 +131,20 @@ export default function LeadsPage() {
       // Carregar membros do workspace
       const { data: membersData, error: membersError } = await supabase
         .from('workspace_members')
-        .select(`
-          user_id,
-          users (
-            id,
-            full_name
-          )
-        `)
+        .select('user_id')
         .eq('workspace_id', workspaceId)
 
-      if (!membersError && membersData) {
-        const members = membersData
-          .map((item: any) => item.users)
-          .filter((user: any) => user !== null)
-        setWorkspaceMembers(members)
+      if (!membersError && membersData && membersData.length > 0) {
+        // Buscar dados dos usuários separadamente
+        const userIds = membersData.map((m: any) => m.user_id)
+        const { data: usersData } = await supabase
+          .from('users')
+          .select('id, full_name')
+          .in('id', userIds)
+
+        setWorkspaceMembers(usersData || [])
+      } else {
+        setWorkspaceMembers([])
       }
     } catch (error) {
       console.error('Erro ao carregar dados:', error)

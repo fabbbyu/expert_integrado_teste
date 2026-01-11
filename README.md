@@ -163,6 +163,14 @@ O isolamento de dados foi garantido em múltiplas camadas:
    - **Desafio**: Carregar métricas sem travar interface
    - **Solução**: React Query para cache e refetch inteligente, queries otimizadas
 
+6. **Relacionamento entre workspace_members e users**
+   - **Desafio**: Supabase não reconhecia relacionamento indireto (workspace_members.user_id → auth.users.id → public.users.id)
+   - **Solução**: Queries separadas (buscar membros primeiro, depois buscar usuários) + trigger automático para criar perfil em public.users quando usuário se cadastra
+
+7. **Activity Logs sem perfil de usuário**
+   - **Desafio**: Activity logs falhavam quando usuário não tinha registro em public.users
+   - **Solução**: Trigger automático + verificação antes de inserir log
+
 ## ✅ Funcionalidades Implementadas
 
 ### Requisitos Obrigatórios

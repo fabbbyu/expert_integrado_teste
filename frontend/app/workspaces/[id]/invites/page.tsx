@@ -66,7 +66,7 @@ export default function InvitesPage() {
 
   const loadInvites = async () => {
     try {
-      const { data, error } = await supabase
+      const { data: invitesData, error } = await supabase
         .from('workspace_invites')
         .select(`
           id,
@@ -74,16 +74,31 @@ export default function InvitesPage() {
           role,
           created_at,
           accepted_at,
-          invited_by,
-          users (
-            full_name
-          )
+          invited_by
         `)
         .eq('workspace_id', workspaceId)
         .order('created_at', { ascending: false })
 
       if (error) throw error
-      setInvites(data || [])
+
+      // Buscar dados dos usuários que enviaram convites separadamente
+      if (invitesData && invitesData.length > 0) {
+        const userIds = invitesData.map((invite: any) => invite.invited_by).filter(Boolean)
+        const { data: usersData } = await supabase
+          .from('users')
+          .select('id, full_name')
+          .in('id', userIds)
+
+        // Combinar dados
+        const invitesWithUsers = invitesData.map((invite: any) => ({
+          ...invite,
+          users: usersData?.find((u: any) => u.id === invite.invited_by) || null,
+        }))
+
+        setInvites(invitesWithUsers)
+      } else {
+        setInvites([])
+      }
     } catch (error) {
       console.error('Erro ao carregar convites:', error)
     } finally {
