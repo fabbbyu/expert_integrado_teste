@@ -167,7 +167,7 @@ export default function WorkspacesPage() {
         }
       }
       
-      alert(translateError(error) || `Erro ao criar workspace: ${errorMessage}`)
+      alert(translateError(error as Error) || `Erro ao criar workspace: ${errorMessage}`)
     }
   }
 

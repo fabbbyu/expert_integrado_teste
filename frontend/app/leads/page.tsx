@@ -315,7 +315,7 @@ export default function LeadsPage() {
       }
     } catch (error) {
       console.error('Erro ao mover lead:', error)
-      alert(translateError(error) || 'Erro ao mover lead. Tente novamente.')
+      alert(translateError(error as Error) || 'Erro ao mover lead. Tente novamente.')
       // Reverter se der erro
       loadData(currentWorkspaceId!)
     }

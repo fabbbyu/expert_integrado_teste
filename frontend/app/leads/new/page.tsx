@@ -221,7 +221,7 @@ export default function NewLeadPage() {
       router.push('/leads')
     } catch (error) {
       console.error('Erro ao criar lead:', error)
-      alert(translateError(error) || 'Erro ao criar lead. Tente novamente.')
+      alert(translateError(error as Error) || 'Erro ao criar lead. Tente novamente.')
     } finally {
       setSaving(false)
     }
