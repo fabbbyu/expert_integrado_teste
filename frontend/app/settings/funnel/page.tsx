@@ -66,6 +66,27 @@ export default function FunnelConfigPage() {
 
       setStages(formattedStages)
 
+      // Se não houver etapas, criar etapas padrão
+      if (formattedStages.length === 0) {
+        await createDefaultStages(workspaceId)
+        // Recarregar após criar
+        const { data: newStagesData, error: newStagesError } = await supabase
+          .from('funnel_stages')
+          .select('*')
+          .eq('workspace_id', workspaceId)
+          .order('order')
+
+        if (!newStagesError && newStagesData) {
+          const newFormattedStages = newStagesData.map((stage: any) => ({
+            ...stage,
+            required_fields: Array.isArray(stage.required_fields)
+              ? stage.required_fields
+              : [],
+          }))
+          setStages(newFormattedStages)
+        }
+      }
+
       // Carregar campos personalizados
       const { data: customFieldsData, error: customFieldsError } = await supabase
         .from('custom_fields')
@@ -84,6 +105,32 @@ export default function FunnelConfigPage() {
       console.error('Erro ao carregar dados:', error)
     } finally {
       setLoading(false)
+    }
+  }
+
+  const createDefaultStages = async (workspaceId: string) => {
+    const defaultStages = [
+      { name: 'Base', order: 1, required_fields: [] },
+      { name: 'Lead Mapeado', order: 2, required_fields: ['name', 'company'] },
+      { name: 'Tentando Contato', order: 3, required_fields: ['name', 'email', 'phone'] },
+      { name: 'Conexão Iniciada', order: 4, required_fields: [] },
+      { name: 'Desqualificado', order: 5, required_fields: [] },
+      { name: 'Qualificado', order: 6, required_fields: [] },
+      { name: 'Reunião Agendada', order: 7, required_fields: [] },
+    ]
+
+    const stagesToInsert = defaultStages.map((stage) => ({
+      workspace_id: workspaceId,
+      name: stage.name,
+      order: stage.order,
+      required_fields: stage.required_fields,
+    }))
+
+    const { error } = await supabase.from('funnel_stages').insert(stagesToInsert)
+
+    if (error) {
+      console.error('Erro ao criar etapas padrão:', error)
+      throw error
     }
   }
 
@@ -174,9 +221,12 @@ export default function FunnelConfigPage() {
             ))}
           </div>
 
-          {stages.length === 0 && (
+          {stages.length === 0 && !loading && (
             <div className="text-center py-12">
-              <p className="text-gray-700 font-medium">Carregando etapas...</p>
+              <p className="text-gray-700 font-medium mb-4">
+                Nenhuma etapa encontrada. As etapas padrão serão criadas automaticamente.
+              </p>
+              <p className="text-sm text-gray-600">Recarregue a página se as etapas não aparecerem.</p>
             </div>
           )}
         </div>
