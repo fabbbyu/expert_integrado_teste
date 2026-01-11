@@ -157,7 +157,16 @@ export default function LeadDetailPage() {
         .limit(5)
 
       if (error) throw error
-      setGeneratedMessages(data || [])
+      
+      // Transformar campaigns de array para objeto único
+      const transformedData = (data || []).map((item: any) => ({
+        ...item,
+        campaigns: Array.isArray(item.campaigns) 
+          ? (item.campaigns[0] || null)
+          : item.campaigns
+      }))
+      
+      setGeneratedMessages(transformedData)
     } catch (error) {
       console.error('Erro ao carregar mensagens geradas:', error)
     }
