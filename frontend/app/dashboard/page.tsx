@@ -62,7 +62,11 @@ export default function DashboardPage() {
       // Agrupar por etapa
       const stageCounts: Record<string, number> = {}
       leadsData?.forEach((lead: any) => {
-        const stageName = lead.funnel_stages?.name || 'Sem etapa'
+        // Transformar funnel_stages de array para objeto único
+        const funnelStage = Array.isArray(lead.funnel_stages) 
+          ? (lead.funnel_stages[0] || null)
+          : lead.funnel_stages
+        const stageName = funnelStage?.name || 'Sem etapa'
         stageCounts[stageName] = (stageCounts[stageName] || 0) + 1
       })
 

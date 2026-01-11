@@ -106,7 +106,20 @@ export default function LeadDetailPage() {
         .single()
 
       if (error) throw error
-      setLead(data)
+      
+      // Transformar relacionamentos de array para objeto único
+      if (data) {
+        const transformedLead = {
+          ...data,
+          funnel_stages: Array.isArray(data.funnel_stages) 
+            ? (data.funnel_stages[0] || null)
+            : data.funnel_stages,
+          users: Array.isArray(data.users) 
+            ? (data.users[0] || null)
+            : data.users
+        }
+        setLead(transformedLead)
+      }
     } catch (error) {
       console.error('Erro ao carregar lead:', error)
       router.push('/leads')
