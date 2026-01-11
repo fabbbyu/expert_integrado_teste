@@ -55,6 +55,7 @@ export default function LeadsPage() {
   const [allLeads, setAllLeads] = useState<Lead[]>([])
   const [workspaceMembers, setWorkspaceMembers] = useState<Array<{ id: string; full_name: string | null }>>([])
   const [loading, setLoading] = useState(true)
+  const [creatingStages, setCreatingStages] = useState(false)
   const [searchTerm, setSearchTerm] = useState('')
   const [filterStage, setFilterStage] = useState<string>('')
   const [filterAssigned, setFilterAssigned] = useState<string>('')
@@ -82,6 +83,46 @@ export default function LeadsPage() {
       loadData(workspaceId)
     }
   }, [user, router])
+
+  const createDefaultStages = async () => {
+    if (!currentWorkspaceId) return
+
+    setCreatingStages(true)
+    try {
+      const defaultStages = [
+        { name: 'Base', order: 1, required_fields: [] },
+        { name: 'Lead Mapeado', order: 2, required_fields: ['name', 'company'] },
+        { name: 'Tentando Contato', order: 3, required_fields: ['name', 'email', 'phone'] },
+        { name: 'Conexão Iniciada', order: 4, required_fields: [] },
+        { name: 'Desqualificado', order: 5, required_fields: [] },
+        { name: 'Qualificado', order: 6, required_fields: [] },
+        { name: 'Reunião Agendada', order: 7, required_fields: [] },
+      ]
+
+      const stagesToInsert = defaultStages.map((stage) => ({
+        workspace_id: currentWorkspaceId,
+        name: stage.name,
+        order: stage.order,
+        required_fields: stage.required_fields,
+      }))
+
+      const { error } = await supabase.from('funnel_stages').insert(stagesToInsert)
+
+      if (error) {
+        console.error('Erro ao criar etapas padrão:', error)
+        alert('Erro ao criar etapas. Tente novamente.')
+        return
+      }
+
+      // Recarregar dados após criar
+      await loadData(currentWorkspaceId)
+    } catch (error) {
+      console.error('Erro ao criar etapas padrão:', error)
+      alert('Erro ao criar etapas. Tente novamente.')
+    } finally {
+      setCreatingStages(false)
+    }
+  }
 
   const loadData = async (workspaceId: string) => {
     try {
@@ -455,9 +496,21 @@ export default function LeadsPage() {
           </DragOverlay>
         </DndContext>
 
-        {stages.length === 0 && (
+        {stages.length === 0 && !loading && (
           <div className="bg-white rounded-lg shadow p-8 text-center">
-            <p className="text-gray-700 font-medium">Carregando etapas...</p>
+            <p className="text-gray-700 font-medium mb-2">
+              Nenhuma etapa encontrada para este workspace.
+            </p>
+            <p className="text-sm text-gray-600 mb-6">
+              Clique no botão abaixo para criar as etapas padrão do funil.
+            </p>
+            <button
+              onClick={createDefaultStages}
+              disabled={creatingStages}
+              className="px-6 py-3 bg-blue-600 text-white rounded-md hover:bg-blue-700 shadow-sm font-semibold disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              {creatingStages ? 'Criando etapas...' : 'Criar Etapas Padrão'}
+            </button>
           </div>
         )}
       </div>
