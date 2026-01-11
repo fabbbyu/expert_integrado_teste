@@ -24,13 +24,16 @@ export async function createActivityLog({
 
     if (!existingUser) {
       // Criar registro básico do usuário se não existir
-      await supabase.from('users').insert({
+      const { error: insertError } = await supabase.from('users').insert({
         id: userId,
         full_name: null,
         created_at: new Date().toISOString(),
-      }).catch(() => {
-        // Ignorar erro se já existir (race condition)
       })
+      
+      // Ignorar erro se já existir (race condition)
+      if (insertError && !insertError.message.includes('duplicate')) {
+        console.error('Erro ao criar usuário:', insertError)
+      }
     }
 
     // Agora inserir o log de atividade
