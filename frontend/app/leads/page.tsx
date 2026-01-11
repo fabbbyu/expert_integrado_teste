@@ -125,8 +125,17 @@ export default function LeadsPage() {
         .eq('workspace_id', workspaceId)
 
       if (leadsError) throw leadsError
-      setAllLeads(leadsData || [])
-      setLeads(leadsData || [])
+      
+      // Transformar funnel_stages de array para objeto único
+      const transformedLeads: Lead[] = (leadsData || []).map((lead: any) => ({
+        ...lead,
+        funnel_stages: Array.isArray(lead.funnel_stages) 
+          ? (lead.funnel_stages[0] ? { name: lead.funnel_stages[0].name } : null)
+          : (lead.funnel_stages ? { name: lead.funnel_stages.name } : null)
+      }))
+      
+      setAllLeads(transformedLeads)
+      setLeads(transformedLeads)
 
       // Carregar membros do workspace
       const { data: membersData, error: membersError } = await supabase
