@@ -191,7 +191,16 @@ export default function LeadDetailPage() {
         .limit(20)
 
       if (error) throw error
-      setActivityLogs(data || [])
+      
+      // Transformar users de array para objeto único
+      const transformedData = (data || []).map((item: any) => ({
+        ...item,
+        users: Array.isArray(item.users) 
+          ? (item.users[0] || null)
+          : item.users
+      }))
+      
+      setActivityLogs(transformedData)
     } catch (error) {
       console.error('Erro ao carregar histórico:', error)
     }
