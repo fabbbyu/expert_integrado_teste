@@ -85,16 +85,16 @@ export default function DashboardPage() {
 
   if (authLoading || isLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <p>Carregando...</p>
+      <div className="min-h-screen flex items-center justify-center bg-gray-50">
+        <p className="text-gray-600 font-medium">Carregando...</p>
       </div>
     )
   }
 
   if (!stats) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <p>Nenhum workspace selecionado</p>
+      <div className="min-h-screen flex items-center justify-center bg-gray-50">
+        <p className="text-gray-600 font-medium">Nenhum workspace selecionado</p>
       </div>
     )
   }

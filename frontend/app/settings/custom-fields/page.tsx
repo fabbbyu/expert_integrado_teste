@@ -129,8 +129,8 @@ export default function CustomFieldsPage() {
 
   if (authLoading || loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <p>Carregando...</p>
+      <div className="min-h-screen flex items-center justify-center bg-gray-50">
+        <p className="text-gray-600 font-medium">Carregando...</p>
       </div>
     )
   }
