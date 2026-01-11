@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useState, Suspense } from 'react'
 import { supabase } from '@/lib/supabase/client'
 import { useAuth } from '@/lib/hooks/use-auth'
 import { useRouter, useSearchParams } from 'next/navigation'
@@ -8,7 +8,7 @@ import { Button } from '@/components/ui/Button'
 import Link from 'next/link'
 import { translateError } from '@/lib/utils/error-translations'
 
-export default function AcceptInvitePage() {
+function AcceptInviteContent() {
   const { user, loading: authLoading } = useAuth()
   const router = useRouter()
   const searchParams = useSearchParams()
@@ -177,3 +177,14 @@ export default function AcceptInvitePage() {
   )
 }
 
+export default function AcceptInvitePage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen flex items-center justify-center">
+        <p>Carregando...</p>
+      </div>
+    }>
+      <AcceptInviteContent />
+    </Suspense>
+  )
+}
